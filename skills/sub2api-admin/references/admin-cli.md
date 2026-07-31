@@ -17,6 +17,42 @@ curl -sS "$SUB2API_BASE_URL/api/v1/auth/login" \
   -d '{"email":"admin@example.com","password":"your-password"}'
 ```
 
+### 本机（Windows / ricktoken）
+
+用户已把鉴权写在 **Windows 用户级环境变量**（不是 skill 文件、也不保证当前 shell 进程一定继承）：
+
+- `SUB2API_BASE_URL` → 通常 `https://ricktoken.de5.net`
+- `SUB2API_ADMIN_API_KEY` → 管理后台 Admin API Key
+
+查找顺序：
+
+1. 当前进程 `printenv SUB2API_BASE_URL` / `printenv SUB2API_ADMIN_API_KEY`
+2. 若为空，读 Windows User/Machine 环境变量（Claude Code / 旧 Git Bash 会话常见“进程里没有、用户变量里有”）：
+
+```bash
+powershell.exe -NoProfile -Command \
+  "[Environment]::GetEnvironmentVariable('SUB2API_BASE_URL','User'); \
+   [Environment]::GetEnvironmentVariable('SUB2API_ADMIN_API_KEY','User') | \
+   ForEach-Object { if (\$_) { \$_.Substring(0,[Math]::Min(10,\$_.Length)) + '...(len=' + \$_.Length + ')' } }"
+```
+
+导入到当前 Git Bash（不要 `echo` key）：
+
+```bash
+eval "$(powershell.exe -NoProfile -Command "
+  \$base = [Environment]::GetEnvironmentVariable('SUB2API_BASE_URL','User')
+  if (-not \$base) { \$base = [Environment]::GetEnvironmentVariable('SUB2API_BASE_URL','Machine') }
+  \$key = [Environment]::GetEnvironmentVariable('SUB2API_ADMIN_API_KEY','User')
+  if (-not \$key) { \$key = [Environment]::GetEnvironmentVariable('SUB2API_ADMIN_API_KEY','Machine') }
+  if (\$base) { 'export SUB2API_BASE_URL=' + [char]39 + \$base + [char]39 }
+  if (\$key)  { 'export SUB2API_ADMIN_API_KEY=' + [char]39 + \$key + [char]39 }
+")"
+```
+
+3. 仍没有时，再考虑 SSH 到 `ubuntu@43.133.209.228` 读 Postgres `settings` 表 `key='admin_api_key'`（应急；只确认长度/前缀，不要把完整 key 写进日志/skill）。本部署 `~/sub2api-deploy/.env` 的 `ADMIN_PASSWORD` 为空，密码登录 JWT 通常不可用。
+
+**禁止**把真实 `SUB2API_ADMIN_API_KEY` 写进本文件或 `SKILL.md`。
+
 ## CLI
 
 以下命令都假设当前目录是这个 skill 目录。
