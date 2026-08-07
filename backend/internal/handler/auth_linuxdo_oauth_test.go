@@ -631,7 +631,7 @@ func TestLinuxDoOAuthCallbackCreatesChoicePendingSessionWhenSignupRequiresInvite
 	require.Equal(t, "third_party_signup", completion["choice_reason"])
 }
 
-func TestLinuxDoOAuthCallbackEmailVerificationCompletesWithBoundEmail(t *testing.T) {
+func TestLinuxDoOAuthCallbackDirectlyLogsInNewUserWhenEmailVerificationEnabled(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/token":
@@ -674,46 +674,18 @@ func TestLinuxDoOAuthCallbackEmailVerificationCompletesWithBoundEmail(t *testing
 	handler.LinuxDoOAuthCallback(c)
 
 	require.Equal(t, http.StatusFound, recorder.Code)
-	require.Equal(t, "/auth/linuxdo/callback", recorder.Header().Get("Location"))
-	sessionCookie := findCookie(recorder.Result().Cookies(), oauthPendingSessionCookieName)
-	require.NotNil(t, sessionCookie)
+	location := recorder.Header().Get("Location")
+	require.Contains(t, location, "/auth/linuxdo/callback#")
+	require.Contains(t, location, "access_token=")
+	require.Contains(t, location, "refresh_token=")
+	fragmentValues := parseOAuthRedirectFragment(t, location)
+	require.Equal(t, "/dashboard", fragmentValues.Get("redirect"))
+	requireCookieCleared(t, recorder, oauthPendingSessionCookieName)
+	requireCookieCleared(t, recorder, oauthPendingBrowserCookieName)
 
 	ctx := context.Background()
-	session, err := client.PendingAuthSession.Query().
-		Where(pendingauthsession.SessionTokenEQ(decodeCookieValueForTest(t, sessionCookie.Value))).
-		Only(ctx)
-	require.NoError(t, err)
-	require.Equal(t, oauthIntentLogin, session.Intent)
-	require.Nil(t, session.TargetUserID)
-	require.Empty(t, session.ResolvedEmail)
-	require.Equal(t, "linuxdo-email-verify-123@linuxdo-connect.invalid", session.UpstreamIdentityClaims["email"])
-
-	completion, ok := session.LocalFlowState[oauthCompletionResponseKey].(map[string]any)
-	require.True(t, ok)
-	require.Equal(t, "create_account_required", completion["step"])
-	require.Equal(t, true, completion["email_binding_required"])
-	require.Equal(t, true, completion["force_email_on_signup"])
-	require.Equal(t, "email_verification_required", completion["choice_reason"])
-	require.NotContains(t, completion, "email")
-	require.NotContains(t, completion, "resolved_email")
-
-	createRecorder := httptest.NewRecorder()
-	createCtx, _ := gin.CreateTestContext(createRecorder)
-	body := bytes.NewBufferString(`{"email":"fresh@example.com","verify_code":"246810","password":"secret-123","adopt_display_name":false,"adopt_avatar":false}`)
-	createReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/oauth/pending/create-account", body)
-	createReq.Header.Set("Content-Type", "application/json")
-	createReq.AddCookie(sessionCookie)
-	createReq.AddCookie(&http.Cookie{Name: oauthPendingBrowserCookieName, Value: encodeCookieValue("browser-email")})
-	createCtx.Request = createReq
-
-	handler.CreatePendingOAuthAccount(createCtx)
-
-	require.Equal(t, http.StatusOK, createRecorder.Code)
-	responseData := decodeJSONBody(t, createRecorder)
-	require.NotEmpty(t, responseData["access_token"])
-
 	userEntity, err := client.User.Query().
-		Where(dbuser.EmailEQ("fresh@example.com")).
+		Where(dbuser.EmailEQ("linuxdo-email-verify-123@linuxdo-connect.invalid")).
 		Only(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "linuxdo", userEntity.SignupSource)
@@ -727,10 +699,6 @@ func TestLinuxDoOAuthCallbackEmailVerificationCompletesWithBoundEmail(t *testing
 		Only(ctx)
 	require.NoError(t, err)
 	require.Equal(t, userEntity.ID, identity.UserID)
-
-	storedSession, err := client.PendingAuthSession.Get(ctx, session.ID)
-	require.NoError(t, err)
-	require.NotNil(t, storedSession.ConsumedAt)
 }
 
 func TestLinuxDoOAuthCallbackDirectlyLogsInNewUserWhenEmailVerificationDisabled(t *testing.T) {
