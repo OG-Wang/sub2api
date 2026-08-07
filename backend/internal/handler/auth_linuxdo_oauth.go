@@ -328,6 +328,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		return
 	}
 	forceEmailOnSignup := h.isForceEmailOnThirdPartySignup(c.Request.Context())
+	invitationRequired := false
 	if compatEmailUser == nil && !forceEmailOnSignup {
 		if err := h.ensureBackendModeAllowsNewUserLogin(c.Request.Context()); err != nil {
 			redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
@@ -374,6 +375,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 			redirectOAuthError(c, frontendCallback, "session_error", infraerrors.Reason(err), infraerrors.Message(err))
 			return
 		}
+		invitationRequired = true
 	}
 	if err := h.createLinuxDoOAuthChoicePendingSession(
 		c,
@@ -385,6 +387,7 @@ func (h *AuthHandler) LinuxDoOAuthCallback(c *gin.Context) {
 		upstreamClaims,
 		compatEmail,
 		compatEmailUser,
+		invitationRequired,
 		forceEmailOnSignup,
 	); err != nil {
 		redirectOAuthError(c, frontendCallback, "session_error", "failed to continue oauth login", "")
@@ -435,6 +438,7 @@ func (h *AuthHandler) createLinuxDoOAuthChoicePendingSession(
 	upstreamClaims map[string]any,
 	compatEmail string,
 	compatEmailUser *dbent.User,
+	invitationRequired bool,
 	forceEmailOnSignup bool,
 ) error {
 	suggestionEmail := strings.TrimSpace(suggestedEmail)
@@ -468,6 +472,11 @@ func (h *AuthHandler) createLinuxDoOAuthChoicePendingSession(
 	}
 	if forceEmailOnSignup && compatEmailUser == nil {
 		completionResponse["choice_reason"] = "force_email_on_signup"
+	}
+	if invitationRequired && compatEmailUser == nil {
+		completionResponse["error"] = "invitation_required"
+		completionResponse["choice_reason"] = "invitation_required"
+		delete(completionResponse, "step")
 	}
 	if forceEmailOnSignup && compatEmailUser == nil {
 		completionResponse["step"] = "create_account_required"
