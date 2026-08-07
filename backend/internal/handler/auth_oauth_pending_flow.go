@@ -429,7 +429,8 @@ func (h *AuthHandler) legacyCompleteRegistrationSessionStatus(
 		return session, true, nil
 	}
 
-	emailVerificationRequired := h != nil && h.authService != nil && h.authService.IsEmailVerifyEnabled(c.Request.Context())
+	emailVerificationRequired := !strings.EqualFold(strings.TrimSpace(session.ProviderType), "linuxdo") &&
+		h != nil && h.authService != nil && h.authService.IsEmailVerifyEnabled(c.Request.Context())
 	forceEmailOnSignup := h.isForceEmailOnThirdPartySignup(c.Request.Context())
 	if !emailVerificationRequired && !forceEmailOnSignup {
 		return session, false, nil
