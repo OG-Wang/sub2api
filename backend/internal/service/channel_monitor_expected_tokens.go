@@ -101,6 +101,15 @@ func monitorFramingOverhead(provider, apiMode string) (overhead int, known bool)
 	return 0, false
 }
 
+// monitorChallengeReferencePrompt 返回一个用于计算参考值的 challenge prompt。
+//
+// 任取一次即可：操作数固定为两位数后，模板渲染出的 prompt token 数恒定
+// （见 channel_monitor_challenge_tokens_test.go 的实测），
+// 所以用哪一组具体操作数算出来的结果都一样。
+func monitorChallengeReferencePrompt() string {
+	return generateChallenge().Prompt
+}
+
 // monitorInputTokenVerdict 一次输入 token 比对的结论。
 type monitorInputTokenVerdict struct {
 	// Reference 本次比对使用的参考值。
