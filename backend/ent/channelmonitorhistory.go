@@ -36,6 +36,12 @@ type ChannelMonitorHistory struct {
 	Quota *domain.MonitorQuotaSnapshot `json:"quota,omitempty"`
 	// CheckedAt holds the value of the "checked_at" field.
 	CheckedAt time.Time `json:"checked_at,omitempty"`
+	// Time to first token in ms; only available for streaming probes
+	TtftMs *int `json:"ttft_ms,omitempty"`
+	// Upstream-reported prompt tokens; constant probe prompt makes deviation meaningful
+	InputTokens *int `json:"input_tokens,omitempty"`
+	// Upstream-reported completion tokens
+	OutputTokens *int `json:"output_tokens,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ChannelMonitorHistoryQuery when eager-loading is set.
 	Edges        ChannelMonitorHistoryEdges `json:"edges"`
@@ -69,7 +75,7 @@ func (*ChannelMonitorHistory) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case channelmonitorhistory.FieldQuota:
 			values[i] = new([]byte)
-		case channelmonitorhistory.FieldID, channelmonitorhistory.FieldMonitorID, channelmonitorhistory.FieldLatencyMs, channelmonitorhistory.FieldPingLatencyMs:
+		case channelmonitorhistory.FieldID, channelmonitorhistory.FieldMonitorID, channelmonitorhistory.FieldLatencyMs, channelmonitorhistory.FieldPingLatencyMs, channelmonitorhistory.FieldTtftMs, channelmonitorhistory.FieldInputTokens, channelmonitorhistory.FieldOutputTokens:
 			values[i] = new(sql.NullInt64)
 		case channelmonitorhistory.FieldModel, channelmonitorhistory.FieldStatus, channelmonitorhistory.FieldMessage:
 			values[i] = new(sql.NullString)
@@ -148,6 +154,27 @@ func (_m *ChannelMonitorHistory) assignValues(columns []string, values []any) er
 			} else if value.Valid {
 				_m.CheckedAt = value.Time
 			}
+		case channelmonitorhistory.FieldTtftMs:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field ttft_ms", values[i])
+			} else if value.Valid {
+				_m.TtftMs = new(int)
+				*_m.TtftMs = int(value.Int64)
+			}
+		case channelmonitorhistory.FieldInputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field input_tokens", values[i])
+			} else if value.Valid {
+				_m.InputTokens = new(int)
+				*_m.InputTokens = int(value.Int64)
+			}
+		case channelmonitorhistory.FieldOutputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field output_tokens", values[i])
+			} else if value.Valid {
+				_m.OutputTokens = new(int)
+				*_m.OutputTokens = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -216,6 +243,21 @@ func (_m *ChannelMonitorHistory) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("checked_at=")
 	builder.WriteString(_m.CheckedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := _m.TtftMs; v != nil {
+		builder.WriteString("ttft_ms=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.InputTokens; v != nil {
+		builder.WriteString("input_tokens=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.OutputTokens; v != nil {
+		builder.WriteString("output_tokens=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }
