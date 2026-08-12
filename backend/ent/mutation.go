@@ -18171,6 +18171,12 @@ type ChannelMonitorHistoryMutation struct {
 	addping_latency_ms *int
 	message            *string
 	checked_at         *time.Time
+	ttft_ms            *int
+	addttft_ms         *int
+	input_tokens       *int
+	addinput_tokens    *int
+	output_tokens      *int
+	addoutput_tokens   *int
 	clearedFields      map[string]struct{}
 	monitor            *int64
 	clearedmonitor     bool
@@ -18610,6 +18616,216 @@ func (m *ChannelMonitorHistoryMutation) ResetCheckedAt() {
 	m.checked_at = nil
 }
 
+// SetTtftMs sets the "ttft_ms" field.
+func (m *ChannelMonitorHistoryMutation) SetTtftMs(i int) {
+	m.ttft_ms = &i
+	m.addttft_ms = nil
+}
+
+// TtftMs returns the value of the "ttft_ms" field in the mutation.
+func (m *ChannelMonitorHistoryMutation) TtftMs() (r int, exists bool) {
+	v := m.ttft_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTtftMs returns the old "ttft_ms" field's value of the ChannelMonitorHistory entity.
+// If the ChannelMonitorHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorHistoryMutation) OldTtftMs(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTtftMs is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTtftMs requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTtftMs: %w", err)
+	}
+	return oldValue.TtftMs, nil
+}
+
+// AddTtftMs adds i to the "ttft_ms" field.
+func (m *ChannelMonitorHistoryMutation) AddTtftMs(i int) {
+	if m.addttft_ms != nil {
+		*m.addttft_ms += i
+	} else {
+		m.addttft_ms = &i
+	}
+}
+
+// AddedTtftMs returns the value that was added to the "ttft_ms" field in this mutation.
+func (m *ChannelMonitorHistoryMutation) AddedTtftMs() (r int, exists bool) {
+	v := m.addttft_ms
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearTtftMs clears the value of the "ttft_ms" field.
+func (m *ChannelMonitorHistoryMutation) ClearTtftMs() {
+	m.ttft_ms = nil
+	m.addttft_ms = nil
+	m.clearedFields[channelmonitorhistory.FieldTtftMs] = struct{}{}
+}
+
+// TtftMsCleared returns if the "ttft_ms" field was cleared in this mutation.
+func (m *ChannelMonitorHistoryMutation) TtftMsCleared() bool {
+	_, ok := m.clearedFields[channelmonitorhistory.FieldTtftMs]
+	return ok
+}
+
+// ResetTtftMs resets all changes to the "ttft_ms" field.
+func (m *ChannelMonitorHistoryMutation) ResetTtftMs() {
+	m.ttft_ms = nil
+	m.addttft_ms = nil
+	delete(m.clearedFields, channelmonitorhistory.FieldTtftMs)
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) SetInputTokens(i int) {
+	m.input_tokens = &i
+	m.addinput_tokens = nil
+}
+
+// InputTokens returns the value of the "input_tokens" field in the mutation.
+func (m *ChannelMonitorHistoryMutation) InputTokens() (r int, exists bool) {
+	v := m.input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInputTokens returns the old "input_tokens" field's value of the ChannelMonitorHistory entity.
+// If the ChannelMonitorHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorHistoryMutation) OldInputTokens(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInputTokens: %w", err)
+	}
+	return oldValue.InputTokens, nil
+}
+
+// AddInputTokens adds i to the "input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) AddInputTokens(i int) {
+	if m.addinput_tokens != nil {
+		*m.addinput_tokens += i
+	} else {
+		m.addinput_tokens = &i
+	}
+}
+
+// AddedInputTokens returns the value that was added to the "input_tokens" field in this mutation.
+func (m *ChannelMonitorHistoryMutation) AddedInputTokens() (r int, exists bool) {
+	v := m.addinput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearInputTokens clears the value of the "input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) ClearInputTokens() {
+	m.input_tokens = nil
+	m.addinput_tokens = nil
+	m.clearedFields[channelmonitorhistory.FieldInputTokens] = struct{}{}
+}
+
+// InputTokensCleared returns if the "input_tokens" field was cleared in this mutation.
+func (m *ChannelMonitorHistoryMutation) InputTokensCleared() bool {
+	_, ok := m.clearedFields[channelmonitorhistory.FieldInputTokens]
+	return ok
+}
+
+// ResetInputTokens resets all changes to the "input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) ResetInputTokens() {
+	m.input_tokens = nil
+	m.addinput_tokens = nil
+	delete(m.clearedFields, channelmonitorhistory.FieldInputTokens)
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (m *ChannelMonitorHistoryMutation) SetOutputTokens(i int) {
+	m.output_tokens = &i
+	m.addoutput_tokens = nil
+}
+
+// OutputTokens returns the value of the "output_tokens" field in the mutation.
+func (m *ChannelMonitorHistoryMutation) OutputTokens() (r int, exists bool) {
+	v := m.output_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOutputTokens returns the old "output_tokens" field's value of the ChannelMonitorHistory entity.
+// If the ChannelMonitorHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorHistoryMutation) OldOutputTokens(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOutputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOutputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOutputTokens: %w", err)
+	}
+	return oldValue.OutputTokens, nil
+}
+
+// AddOutputTokens adds i to the "output_tokens" field.
+func (m *ChannelMonitorHistoryMutation) AddOutputTokens(i int) {
+	if m.addoutput_tokens != nil {
+		*m.addoutput_tokens += i
+	} else {
+		m.addoutput_tokens = &i
+	}
+}
+
+// AddedOutputTokens returns the value that was added to the "output_tokens" field in this mutation.
+func (m *ChannelMonitorHistoryMutation) AddedOutputTokens() (r int, exists bool) {
+	v := m.addoutput_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearOutputTokens clears the value of the "output_tokens" field.
+func (m *ChannelMonitorHistoryMutation) ClearOutputTokens() {
+	m.output_tokens = nil
+	m.addoutput_tokens = nil
+	m.clearedFields[channelmonitorhistory.FieldOutputTokens] = struct{}{}
+}
+
+// OutputTokensCleared returns if the "output_tokens" field was cleared in this mutation.
+func (m *ChannelMonitorHistoryMutation) OutputTokensCleared() bool {
+	_, ok := m.clearedFields[channelmonitorhistory.FieldOutputTokens]
+	return ok
+}
+
+// ResetOutputTokens resets all changes to the "output_tokens" field.
+func (m *ChannelMonitorHistoryMutation) ResetOutputTokens() {
+	m.output_tokens = nil
+	m.addoutput_tokens = nil
+	delete(m.clearedFields, channelmonitorhistory.FieldOutputTokens)
+}
+
 // ClearMonitor clears the "monitor" edge to the ChannelMonitor entity.
 func (m *ChannelMonitorHistoryMutation) ClearMonitor() {
 	m.clearedmonitor = true
@@ -18671,7 +18887,7 @@ func (m *ChannelMonitorHistoryMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMonitorHistoryMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 10)
 	if m.monitor != nil {
 		fields = append(fields, channelmonitorhistory.FieldMonitorID)
 	}
@@ -18692,6 +18908,15 @@ func (m *ChannelMonitorHistoryMutation) Fields() []string {
 	}
 	if m.checked_at != nil {
 		fields = append(fields, channelmonitorhistory.FieldCheckedAt)
+	}
+	if m.ttft_ms != nil {
+		fields = append(fields, channelmonitorhistory.FieldTtftMs)
+	}
+	if m.input_tokens != nil {
+		fields = append(fields, channelmonitorhistory.FieldInputTokens)
+	}
+	if m.output_tokens != nil {
+		fields = append(fields, channelmonitorhistory.FieldOutputTokens)
 	}
 	return fields
 }
@@ -18715,6 +18940,12 @@ func (m *ChannelMonitorHistoryMutation) Field(name string) (ent.Value, bool) {
 		return m.Message()
 	case channelmonitorhistory.FieldCheckedAt:
 		return m.CheckedAt()
+	case channelmonitorhistory.FieldTtftMs:
+		return m.TtftMs()
+	case channelmonitorhistory.FieldInputTokens:
+		return m.InputTokens()
+	case channelmonitorhistory.FieldOutputTokens:
+		return m.OutputTokens()
 	}
 	return nil, false
 }
@@ -18738,6 +18969,12 @@ func (m *ChannelMonitorHistoryMutation) OldField(ctx context.Context, name strin
 		return m.OldMessage(ctx)
 	case channelmonitorhistory.FieldCheckedAt:
 		return m.OldCheckedAt(ctx)
+	case channelmonitorhistory.FieldTtftMs:
+		return m.OldTtftMs(ctx)
+	case channelmonitorhistory.FieldInputTokens:
+		return m.OldInputTokens(ctx)
+	case channelmonitorhistory.FieldOutputTokens:
+		return m.OldOutputTokens(ctx)
 	}
 	return nil, fmt.Errorf("unknown ChannelMonitorHistory field %s", name)
 }
@@ -18796,6 +19033,27 @@ func (m *ChannelMonitorHistoryMutation) SetField(name string, value ent.Value) e
 		}
 		m.SetCheckedAt(v)
 		return nil
+	case channelmonitorhistory.FieldTtftMs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTtftMs(v)
+		return nil
+	case channelmonitorhistory.FieldInputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInputTokens(v)
+		return nil
+	case channelmonitorhistory.FieldOutputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOutputTokens(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitorHistory field %s", name)
 }
@@ -18810,6 +19068,15 @@ func (m *ChannelMonitorHistoryMutation) AddedFields() []string {
 	if m.addping_latency_ms != nil {
 		fields = append(fields, channelmonitorhistory.FieldPingLatencyMs)
 	}
+	if m.addttft_ms != nil {
+		fields = append(fields, channelmonitorhistory.FieldTtftMs)
+	}
+	if m.addinput_tokens != nil {
+		fields = append(fields, channelmonitorhistory.FieldInputTokens)
+	}
+	if m.addoutput_tokens != nil {
+		fields = append(fields, channelmonitorhistory.FieldOutputTokens)
+	}
 	return fields
 }
 
@@ -18822,6 +19089,12 @@ func (m *ChannelMonitorHistoryMutation) AddedField(name string) (ent.Value, bool
 		return m.AddedLatencyMs()
 	case channelmonitorhistory.FieldPingLatencyMs:
 		return m.AddedPingLatencyMs()
+	case channelmonitorhistory.FieldTtftMs:
+		return m.AddedTtftMs()
+	case channelmonitorhistory.FieldInputTokens:
+		return m.AddedInputTokens()
+	case channelmonitorhistory.FieldOutputTokens:
+		return m.AddedOutputTokens()
 	}
 	return nil, false
 }
@@ -18845,6 +19118,27 @@ func (m *ChannelMonitorHistoryMutation) AddField(name string, value ent.Value) e
 		}
 		m.AddPingLatencyMs(v)
 		return nil
+	case channelmonitorhistory.FieldTtftMs:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTtftMs(v)
+		return nil
+	case channelmonitorhistory.FieldInputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddInputTokens(v)
+		return nil
+	case channelmonitorhistory.FieldOutputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOutputTokens(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitorHistory numeric field %s", name)
 }
@@ -18861,6 +19155,15 @@ func (m *ChannelMonitorHistoryMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(channelmonitorhistory.FieldMessage) {
 		fields = append(fields, channelmonitorhistory.FieldMessage)
+	}
+	if m.FieldCleared(channelmonitorhistory.FieldTtftMs) {
+		fields = append(fields, channelmonitorhistory.FieldTtftMs)
+	}
+	if m.FieldCleared(channelmonitorhistory.FieldInputTokens) {
+		fields = append(fields, channelmonitorhistory.FieldInputTokens)
+	}
+	if m.FieldCleared(channelmonitorhistory.FieldOutputTokens) {
+		fields = append(fields, channelmonitorhistory.FieldOutputTokens)
 	}
 	return fields
 }
@@ -18884,6 +19187,15 @@ func (m *ChannelMonitorHistoryMutation) ClearField(name string) error {
 		return nil
 	case channelmonitorhistory.FieldMessage:
 		m.ClearMessage()
+		return nil
+	case channelmonitorhistory.FieldTtftMs:
+		m.ClearTtftMs()
+		return nil
+	case channelmonitorhistory.FieldInputTokens:
+		m.ClearInputTokens()
+		return nil
+	case channelmonitorhistory.FieldOutputTokens:
+		m.ClearOutputTokens()
 		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitorHistory nullable field %s", name)
@@ -18913,6 +19225,15 @@ func (m *ChannelMonitorHistoryMutation) ResetField(name string) error {
 		return nil
 	case channelmonitorhistory.FieldCheckedAt:
 		m.ResetCheckedAt()
+		return nil
+	case channelmonitorhistory.FieldTtftMs:
+		m.ResetTtftMs()
+		return nil
+	case channelmonitorhistory.FieldInputTokens:
+		m.ResetInputTokens()
+		return nil
+	case channelmonitorhistory.FieldOutputTokens:
+		m.ResetOutputTokens()
 		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitorHistory field %s", name)

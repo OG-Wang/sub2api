@@ -159,6 +159,87 @@ func (_u *ChannelMonitorHistoryUpdate) SetNillableCheckedAt(v *time.Time) *Chann
 	return _u
 }
 
+// SetTtftMs sets the "ttft_ms" field.
+func (_u *ChannelMonitorHistoryUpdate) SetTtftMs(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.ResetTtftMs()
+	_u.mutation.SetTtftMs(v)
+	return _u
+}
+
+// SetNillableTtftMs sets the "ttft_ms" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdate) SetNillableTtftMs(v *int) *ChannelMonitorHistoryUpdate {
+	if v != nil {
+		_u.SetTtftMs(*v)
+	}
+	return _u
+}
+
+// AddTtftMs adds value to the "ttft_ms" field.
+func (_u *ChannelMonitorHistoryUpdate) AddTtftMs(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.AddTtftMs(v)
+	return _u
+}
+
+// ClearTtftMs clears the value of the "ttft_ms" field.
+func (_u *ChannelMonitorHistoryUpdate) ClearTtftMs() *ChannelMonitorHistoryUpdate {
+	_u.mutation.ClearTtftMs()
+	return _u
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) SetInputTokens(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.ResetInputTokens()
+	_u.mutation.SetInputTokens(v)
+	return _u
+}
+
+// SetNillableInputTokens sets the "input_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdate) SetNillableInputTokens(v *int) *ChannelMonitorHistoryUpdate {
+	if v != nil {
+		_u.SetInputTokens(*v)
+	}
+	return _u
+}
+
+// AddInputTokens adds value to the "input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) AddInputTokens(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.AddInputTokens(v)
+	return _u
+}
+
+// ClearInputTokens clears the value of the "input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) ClearInputTokens() *ChannelMonitorHistoryUpdate {
+	_u.mutation.ClearInputTokens()
+	return _u
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) SetOutputTokens(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.ResetOutputTokens()
+	_u.mutation.SetOutputTokens(v)
+	return _u
+}
+
+// SetNillableOutputTokens sets the "output_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdate) SetNillableOutputTokens(v *int) *ChannelMonitorHistoryUpdate {
+	if v != nil {
+		_u.SetOutputTokens(*v)
+	}
+	return _u
+}
+
+// AddOutputTokens adds value to the "output_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) AddOutputTokens(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.AddOutputTokens(v)
+	return _u
+}
+
+// ClearOutputTokens clears the value of the "output_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) ClearOutputTokens() *ChannelMonitorHistoryUpdate {
+	_u.mutation.ClearOutputTokens()
+	return _u
+}
+
 // SetMonitor sets the "monitor" edge to the ChannelMonitor entity.
 func (_u *ChannelMonitorHistoryUpdate) SetMonitor(v *ChannelMonitor) *ChannelMonitorHistoryUpdate {
 	return _u.SetMonitorID(v.ID)
@@ -269,6 +350,33 @@ func (_u *ChannelMonitorHistoryUpdate) sqlSave(ctx context.Context) (_node int, 
 	}
 	if value, ok := _u.mutation.CheckedAt(); ok {
 		_spec.SetField(channelmonitorhistory.FieldCheckedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.TtftMs(); ok {
+		_spec.SetField(channelmonitorhistory.FieldTtftMs, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTtftMs(); ok {
+		_spec.AddField(channelmonitorhistory.FieldTtftMs, field.TypeInt, value)
+	}
+	if _u.mutation.TtftMsCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldTtftMs, field.TypeInt)
+	}
+	if value, ok := _u.mutation.InputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldInputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedInputTokens(); ok {
+		_spec.AddField(channelmonitorhistory.FieldInputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.InputTokensCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldInputTokens, field.TypeInt)
+	}
+	if value, ok := _u.mutation.OutputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedOutputTokens(); ok {
+		_spec.AddField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.OutputTokensCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldOutputTokens, field.TypeInt)
 	}
 	if _u.mutation.MonitorCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -449,6 +557,87 @@ func (_u *ChannelMonitorHistoryUpdateOne) SetNillableCheckedAt(v *time.Time) *Ch
 	return _u
 }
 
+// SetTtftMs sets the "ttft_ms" field.
+func (_u *ChannelMonitorHistoryUpdateOne) SetTtftMs(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ResetTtftMs()
+	_u.mutation.SetTtftMs(v)
+	return _u
+}
+
+// SetNillableTtftMs sets the "ttft_ms" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdateOne) SetNillableTtftMs(v *int) *ChannelMonitorHistoryUpdateOne {
+	if v != nil {
+		_u.SetTtftMs(*v)
+	}
+	return _u
+}
+
+// AddTtftMs adds value to the "ttft_ms" field.
+func (_u *ChannelMonitorHistoryUpdateOne) AddTtftMs(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.AddTtftMs(v)
+	return _u
+}
+
+// ClearTtftMs clears the value of the "ttft_ms" field.
+func (_u *ChannelMonitorHistoryUpdateOne) ClearTtftMs() *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ClearTtftMs()
+	return _u
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) SetInputTokens(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ResetInputTokens()
+	_u.mutation.SetInputTokens(v)
+	return _u
+}
+
+// SetNillableInputTokens sets the "input_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdateOne) SetNillableInputTokens(v *int) *ChannelMonitorHistoryUpdateOne {
+	if v != nil {
+		_u.SetInputTokens(*v)
+	}
+	return _u
+}
+
+// AddInputTokens adds value to the "input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) AddInputTokens(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.AddInputTokens(v)
+	return _u
+}
+
+// ClearInputTokens clears the value of the "input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) ClearInputTokens() *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ClearInputTokens()
+	return _u
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) SetOutputTokens(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ResetOutputTokens()
+	_u.mutation.SetOutputTokens(v)
+	return _u
+}
+
+// SetNillableOutputTokens sets the "output_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdateOne) SetNillableOutputTokens(v *int) *ChannelMonitorHistoryUpdateOne {
+	if v != nil {
+		_u.SetOutputTokens(*v)
+	}
+	return _u
+}
+
+// AddOutputTokens adds value to the "output_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) AddOutputTokens(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.AddOutputTokens(v)
+	return _u
+}
+
+// ClearOutputTokens clears the value of the "output_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) ClearOutputTokens() *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ClearOutputTokens()
+	return _u
+}
+
 // SetMonitor sets the "monitor" edge to the ChannelMonitor entity.
 func (_u *ChannelMonitorHistoryUpdateOne) SetMonitor(v *ChannelMonitor) *ChannelMonitorHistoryUpdateOne {
 	return _u.SetMonitorID(v.ID)
@@ -589,6 +778,33 @@ func (_u *ChannelMonitorHistoryUpdateOne) sqlSave(ctx context.Context) (_node *C
 	}
 	if value, ok := _u.mutation.CheckedAt(); ok {
 		_spec.SetField(channelmonitorhistory.FieldCheckedAt, field.TypeTime, value)
+	}
+	if value, ok := _u.mutation.TtftMs(); ok {
+		_spec.SetField(channelmonitorhistory.FieldTtftMs, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedTtftMs(); ok {
+		_spec.AddField(channelmonitorhistory.FieldTtftMs, field.TypeInt, value)
+	}
+	if _u.mutation.TtftMsCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldTtftMs, field.TypeInt)
+	}
+	if value, ok := _u.mutation.InputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldInputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedInputTokens(); ok {
+		_spec.AddField(channelmonitorhistory.FieldInputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.InputTokensCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldInputTokens, field.TypeInt)
+	}
+	if value, ok := _u.mutation.OutputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedOutputTokens(); ok {
+		_spec.AddField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.OutputTokensCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldOutputTokens, field.TypeInt)
 	}
 	if _u.mutation.MonitorCleared() {
 		edge := &sqlgraph.EdgeSpec{

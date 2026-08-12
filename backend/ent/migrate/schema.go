@@ -749,6 +749,9 @@ var (
 		{Name: "ping_latency_ms", Type: field.TypeInt, Nullable: true},
 		{Name: "message", Type: field.TypeString, Nullable: true, Size: 500, Default: ""},
 		{Name: "checked_at", Type: field.TypeTime},
+		{Name: "ttft_ms", Type: field.TypeInt, Nullable: true},
+		{Name: "input_tokens", Type: field.TypeInt, Nullable: true},
+		{Name: "output_tokens", Type: field.TypeInt, Nullable: true},
 		{Name: "monitor_id", Type: field.TypeInt64},
 	}
 	// ChannelMonitorHistoriesTable holds the schema information for the "channel_monitor_histories" table.
@@ -759,7 +762,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "channel_monitor_histories_channel_monitors_history",
-				Columns:    []*schema.Column{ChannelMonitorHistoriesColumns[7]},
+				Columns:    []*schema.Column{ChannelMonitorHistoriesColumns[10]},
 				RefColumns: []*schema.Column{ChannelMonitorsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -768,7 +771,7 @@ var (
 			{
 				Name:    "channelmonitorhistory_monitor_id_model_checked_at",
 				Unique:  false,
-				Columns: []*schema.Column{ChannelMonitorHistoriesColumns[7], ChannelMonitorHistoriesColumns[1], ChannelMonitorHistoriesColumns[6]},
+				Columns: []*schema.Column{ChannelMonitorHistoriesColumns[10], ChannelMonitorHistoriesColumns[1], ChannelMonitorHistoriesColumns[6]},
 			},
 			{
 				Name:    "channelmonitorhistory_checked_at",

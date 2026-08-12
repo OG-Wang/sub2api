@@ -97,6 +97,48 @@ func (_c *ChannelMonitorHistoryCreate) SetNillableCheckedAt(v *time.Time) *Chann
 	return _c
 }
 
+// SetTtftMs sets the "ttft_ms" field.
+func (_c *ChannelMonitorHistoryCreate) SetTtftMs(v int) *ChannelMonitorHistoryCreate {
+	_c.mutation.SetTtftMs(v)
+	return _c
+}
+
+// SetNillableTtftMs sets the "ttft_ms" field if the given value is not nil.
+func (_c *ChannelMonitorHistoryCreate) SetNillableTtftMs(v *int) *ChannelMonitorHistoryCreate {
+	if v != nil {
+		_c.SetTtftMs(*v)
+	}
+	return _c
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (_c *ChannelMonitorHistoryCreate) SetInputTokens(v int) *ChannelMonitorHistoryCreate {
+	_c.mutation.SetInputTokens(v)
+	return _c
+}
+
+// SetNillableInputTokens sets the "input_tokens" field if the given value is not nil.
+func (_c *ChannelMonitorHistoryCreate) SetNillableInputTokens(v *int) *ChannelMonitorHistoryCreate {
+	if v != nil {
+		_c.SetInputTokens(*v)
+	}
+	return _c
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (_c *ChannelMonitorHistoryCreate) SetOutputTokens(v int) *ChannelMonitorHistoryCreate {
+	_c.mutation.SetOutputTokens(v)
+	return _c
+}
+
+// SetNillableOutputTokens sets the "output_tokens" field if the given value is not nil.
+func (_c *ChannelMonitorHistoryCreate) SetNillableOutputTokens(v *int) *ChannelMonitorHistoryCreate {
+	if v != nil {
+		_c.SetOutputTokens(*v)
+	}
+	return _c
+}
+
 // SetMonitor sets the "monitor" edge to the ChannelMonitor entity.
 func (_c *ChannelMonitorHistoryCreate) SetMonitor(v *ChannelMonitor) *ChannelMonitorHistoryCreate {
 	return _c.SetMonitorID(v.ID)
@@ -229,6 +271,18 @@ func (_c *ChannelMonitorHistoryCreate) createSpec() (*ChannelMonitorHistory, *sq
 	if value, ok := _c.mutation.CheckedAt(); ok {
 		_spec.SetField(channelmonitorhistory.FieldCheckedAt, field.TypeTime, value)
 		_node.CheckedAt = value
+	}
+	if value, ok := _c.mutation.TtftMs(); ok {
+		_spec.SetField(channelmonitorhistory.FieldTtftMs, field.TypeInt, value)
+		_node.TtftMs = &value
+	}
+	if value, ok := _c.mutation.InputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldInputTokens, field.TypeInt, value)
+		_node.InputTokens = &value
+	}
+	if value, ok := _c.mutation.OutputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)
+		_node.OutputTokens = &value
 	}
 	if nodes := _c.mutation.MonitorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -413,6 +467,78 @@ func (u *ChannelMonitorHistoryUpsert) UpdateCheckedAt() *ChannelMonitorHistoryUp
 	return u
 }
 
+// SetTtftMs sets the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsert) SetTtftMs(v int) *ChannelMonitorHistoryUpsert {
+	u.Set(channelmonitorhistory.FieldTtftMs, v)
+	return u
+}
+
+// UpdateTtftMs sets the "ttft_ms" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsert) UpdateTtftMs() *ChannelMonitorHistoryUpsert {
+	u.SetExcluded(channelmonitorhistory.FieldTtftMs)
+	return u
+}
+
+// AddTtftMs adds v to the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsert) AddTtftMs(v int) *ChannelMonitorHistoryUpsert {
+	u.Add(channelmonitorhistory.FieldTtftMs, v)
+	return u
+}
+
+// ClearTtftMs clears the value of the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsert) ClearTtftMs() *ChannelMonitorHistoryUpsert {
+	u.SetNull(channelmonitorhistory.FieldTtftMs)
+	return u
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) SetInputTokens(v int) *ChannelMonitorHistoryUpsert {
+	u.Set(channelmonitorhistory.FieldInputTokens, v)
+	return u
+}
+
+// UpdateInputTokens sets the "input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsert) UpdateInputTokens() *ChannelMonitorHistoryUpsert {
+	u.SetExcluded(channelmonitorhistory.FieldInputTokens)
+	return u
+}
+
+// AddInputTokens adds v to the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) AddInputTokens(v int) *ChannelMonitorHistoryUpsert {
+	u.Add(channelmonitorhistory.FieldInputTokens, v)
+	return u
+}
+
+// ClearInputTokens clears the value of the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) ClearInputTokens() *ChannelMonitorHistoryUpsert {
+	u.SetNull(channelmonitorhistory.FieldInputTokens)
+	return u
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) SetOutputTokens(v int) *ChannelMonitorHistoryUpsert {
+	u.Set(channelmonitorhistory.FieldOutputTokens, v)
+	return u
+}
+
+// UpdateOutputTokens sets the "output_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsert) UpdateOutputTokens() *ChannelMonitorHistoryUpsert {
+	u.SetExcluded(channelmonitorhistory.FieldOutputTokens)
+	return u
+}
+
+// AddOutputTokens adds v to the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) AddOutputTokens(v int) *ChannelMonitorHistoryUpsert {
+	u.Add(channelmonitorhistory.FieldOutputTokens, v)
+	return u
+}
+
+// ClearOutputTokens clears the value of the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) ClearOutputTokens() *ChannelMonitorHistoryUpsert {
+	u.SetNull(channelmonitorhistory.FieldOutputTokens)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -583,6 +709,90 @@ func (u *ChannelMonitorHistoryUpsertOne) SetCheckedAt(v time.Time) *ChannelMonit
 func (u *ChannelMonitorHistoryUpsertOne) UpdateCheckedAt() *ChannelMonitorHistoryUpsertOne {
 	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
 		s.UpdateCheckedAt()
+	})
+}
+
+// SetTtftMs sets the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsertOne) SetTtftMs(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetTtftMs(v)
+	})
+}
+
+// AddTtftMs adds v to the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsertOne) AddTtftMs(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddTtftMs(v)
+	})
+}
+
+// UpdateTtftMs sets the "ttft_ms" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertOne) UpdateTtftMs() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateTtftMs()
+	})
+}
+
+// ClearTtftMs clears the value of the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsertOne) ClearTtftMs() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearTtftMs()
+	})
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) SetInputTokens(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetInputTokens(v)
+	})
+}
+
+// AddInputTokens adds v to the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) AddInputTokens(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddInputTokens(v)
+	})
+}
+
+// UpdateInputTokens sets the "input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertOne) UpdateInputTokens() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateInputTokens()
+	})
+}
+
+// ClearInputTokens clears the value of the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) ClearInputTokens() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearInputTokens()
+	})
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) SetOutputTokens(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetOutputTokens(v)
+	})
+}
+
+// AddOutputTokens adds v to the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) AddOutputTokens(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddOutputTokens(v)
+	})
+}
+
+// UpdateOutputTokens sets the "output_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertOne) UpdateOutputTokens() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateOutputTokens()
+	})
+}
+
+// ClearOutputTokens clears the value of the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) ClearOutputTokens() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearOutputTokens()
 	})
 }
 
@@ -920,6 +1130,90 @@ func (u *ChannelMonitorHistoryUpsertBulk) SetCheckedAt(v time.Time) *ChannelMoni
 func (u *ChannelMonitorHistoryUpsertBulk) UpdateCheckedAt() *ChannelMonitorHistoryUpsertBulk {
 	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
 		s.UpdateCheckedAt()
+	})
+}
+
+// SetTtftMs sets the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsertBulk) SetTtftMs(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetTtftMs(v)
+	})
+}
+
+// AddTtftMs adds v to the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsertBulk) AddTtftMs(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddTtftMs(v)
+	})
+}
+
+// UpdateTtftMs sets the "ttft_ms" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertBulk) UpdateTtftMs() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateTtftMs()
+	})
+}
+
+// ClearTtftMs clears the value of the "ttft_ms" field.
+func (u *ChannelMonitorHistoryUpsertBulk) ClearTtftMs() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearTtftMs()
+	})
+}
+
+// SetInputTokens sets the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) SetInputTokens(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetInputTokens(v)
+	})
+}
+
+// AddInputTokens adds v to the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) AddInputTokens(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddInputTokens(v)
+	})
+}
+
+// UpdateInputTokens sets the "input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertBulk) UpdateInputTokens() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateInputTokens()
+	})
+}
+
+// ClearInputTokens clears the value of the "input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) ClearInputTokens() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearInputTokens()
+	})
+}
+
+// SetOutputTokens sets the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) SetOutputTokens(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetOutputTokens(v)
+	})
+}
+
+// AddOutputTokens adds v to the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) AddOutputTokens(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddOutputTokens(v)
+	})
+}
+
+// UpdateOutputTokens sets the "output_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertBulk) UpdateOutputTokens() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateOutputTokens()
+	})
+}
+
+// ClearOutputTokens clears the value of the "output_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) ClearOutputTokens() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearOutputTokens()
 	})
 }
 

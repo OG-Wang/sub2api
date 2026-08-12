@@ -134,6 +134,9 @@ type channelMonitorCheckResultResponse struct {
 	PingLatencyMs *int   `json:"ping_latency_ms"`
 	Message       string `json:"message"`
 	CheckedAt     string `json:"checked_at"`
+	TTFTMs        *int   `json:"ttft_ms"`
+	InputTokens   *int   `json:"input_tokens"`
+	OutputTokens  *int   `json:"output_tokens"`
 }
 
 type channelMonitorHistoryItemResponse struct {
@@ -144,6 +147,9 @@ type channelMonitorHistoryItemResponse struct {
 	PingLatencyMs *int   `json:"ping_latency_ms"`
 	Message       string `json:"message"`
 	CheckedAt     string `json:"checked_at"`
+	TTFTMs        *int   `json:"ttft_ms"`
+	InputTokens   *int   `json:"input_tokens"`
+	OutputTokens  *int   `json:"output_tokens"`
 }
 
 // maskAPIKey 对 API Key 明文做脱敏：前 4 字符 + "***"，长度 ≤ 4 时只显示 "***"。
@@ -209,6 +215,9 @@ func checkResultToResponse(r *service.CheckResult) channelMonitorCheckResultResp
 		PingLatencyMs: r.PingLatencyMs,
 		Message:       r.Message,
 		CheckedAt:     r.CheckedAt.UTC().Format(time.RFC3339),
+		TTFTMs:        r.TTFTMs,
+		InputTokens:   r.InputTokens,
+		OutputTokens:  r.OutputTokens,
 	}
 }
 
@@ -221,6 +230,9 @@ func historyEntryToResponse(e *service.ChannelMonitorHistoryEntry) channelMonito
 		PingLatencyMs: e.PingLatencyMs,
 		Message:       e.Message,
 		CheckedAt:     e.CheckedAt.UTC().Format(time.RFC3339),
+		TTFTMs:        e.TTFTMs,
+		InputTokens:   e.InputTokens,
+		OutputTokens:  e.OutputTokens,
 	}
 }
 

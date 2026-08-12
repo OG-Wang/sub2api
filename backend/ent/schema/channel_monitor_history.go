@@ -45,6 +45,25 @@ func (ChannelMonitorHistory) Fields() []ent.Field {
 			MaxLen(500),
 		field.Time("checked_at").
 			Default(time.Now),
+
+		// ---- 探测指标（供应商大厅）----
+		// 三个字段都可空：历史行没有、失败的检测也没有。
+
+		// ttft_ms: 首 token 到达耗时。仅流式探测能测到，非流式为空。
+		field.Int("ttft_ms").
+			Optional().
+			Nillable().
+			Comment("Time to first token in ms; only available for streaming probes"),
+		// input_tokens: 上游报告的输入 token 数。探测 prompt 长度恒定，
+		// 该值显著高于基线说明上游注入了额外内容。
+		field.Int("input_tokens").
+			Optional().
+			Nillable().
+			Comment("Upstream-reported prompt tokens; constant probe prompt makes deviation meaningful"),
+		field.Int("output_tokens").
+			Optional().
+			Nillable().
+			Comment("Upstream-reported completion tokens"),
 	}
 }
 

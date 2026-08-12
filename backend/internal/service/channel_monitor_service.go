@@ -504,6 +504,9 @@ func (s *ChannelMonitorService) persistCheckResults(ctx context.Context, m *Chan
 			PingLatencyMs: r.PingLatencyMs,
 			Message:       r.Message,
 			CheckedAt:     r.CheckedAt,
+			TTFTMs:        r.TTFTMs,
+			InputTokens:   r.InputTokens,
+			OutputTokens:  r.OutputTokens,
 		})
 	}
 	if err := s.repo.InsertHistoryBatch(ctx, rows); err != nil {
