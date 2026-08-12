@@ -89,29 +89,3 @@ func extractMonitorTokenCount(rawBody, path string) *int {
 	}
 	return &value
 }
-
-// monitorInputTokenTolerance 注水判定的容差比例。
-//
-// 必须留容差：各家 tokenizer 实现有差异，同一段 prompt 在不同上游
-// 报出的 token 数天然会差几个。严格相等会误报刷屏。
-// 20% 对「被塞了一整段 system prompt」（通常翻倍以上）足够敏感。
-const monitorInputTokenTolerance = 0.2
-
-// evaluateMonitorTokenInflation 判断本次探测的输入 token 是否明显超出基线。
-//
-// expected 为 nil（管理员没配基线）或 actual 为 nil（上游没报用量）时返回 false ——
-// 没有依据就不下结论。只在「超出」方向判定：低于基线可能是上游做了缓存或压缩，
-// 不是欺诈信号。
-//
-// 能力边界：该手段只能抓「注入 system prompt / 虚报输入用量」。
-// 上游虚报 output token、私调倍率、降智换小模型都抓不到。
-func evaluateMonitorTokenInflation(expected, actual *int) bool {
-	if expected == nil || actual == nil {
-		return false
-	}
-	if *expected <= 0 {
-		return false
-	}
-	threshold := float64(*expected) * (1 + monitorInputTokenTolerance)
-	return float64(*actual) > threshold
-}
