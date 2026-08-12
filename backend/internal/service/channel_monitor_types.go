@@ -180,6 +180,14 @@ type CheckResult struct {
 	TTFTMs       *int
 	InputTokens  *int
 	OutputTokens *int
+
+	// ExpectedInputTokens 本地算出的「应计输入 token」，用于和上游报数比对。
+	// 不落库：由 prompt 与协议决定，任何时候都能重算。
+	ExpectedInputTokens *int
+	// InputTokensInflated 上游报的输入 token 明显超出真值，说明被塞了额外内容。
+	InputTokensInflated bool
+	// InputTokenWarning 注水告警文案，未注水时为空串。
+	InputTokenWarning string
 }
 
 // UserMonitorView 用户只读视图：监控概览（含主模型最近状态 + 7d 可用率 + 附加模型最近状态）。
