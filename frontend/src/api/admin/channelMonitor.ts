@@ -100,6 +100,16 @@ export interface ChannelMonitor {
   account_id: number | null
   /** 主模型最近一次配额快照（配额模式；无历史时为 null） */
   latest_quota?: MonitorQuotaSnapshot | null
+  /** 供应商大厅：关联的真实分组 ID，null 表示未关联（回退到 group_name 字符串展示） */
+  group_id: number | null
+  /** 供应商大厅：是否在用户端大厅展示，默认 false */
+  public_visible: boolean
+  /** 供应商大厅：展示在分组名下方的备注 */
+  public_note: string
+  /** 供应商大厅：可选的外部检测报告链接，空则不渲染 */
+  report_url: string
+  /** 探测输入 token 基线，null 表示走自动学习 */
+  expected_input_tokens: number | null
 }
 
 export interface ExtraModelStatus {
@@ -148,12 +158,21 @@ export interface CreateParams {
   extra_headers?: Record<string, string>
   body_override_mode?: BodyOverrideMode
   body_override?: Record<string, unknown> | null
+  group_id?: number | null
+  public_visible?: boolean
+  public_note?: string
+  report_url?: string
+  expected_input_tokens?: number | null
 }
 
 // Update request: api_key 空串 = 不修改；clear_template=true 时把 template_id 置空；
 // account_id=0 显式解绑关联账号（null = 不动，见 CreateParams 注释）
 export type UpdateParams = Partial<CreateParams> & {
   clear_template?: boolean
+  /** true 时把 group_id 置空，忽略 group_id */
+  clear_group_id?: boolean
+  /** true 时把 expected_input_tokens 置空（回到自动学习） */
+  clear_expected_input_tokens?: boolean
 }
 
 export interface CheckResult {
