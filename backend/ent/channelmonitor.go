@@ -61,6 +61,16 @@ type ChannelMonitor struct {
 	BodyOverrideMode string `json:"body_override_mode,omitempty"`
 	// BodyOverride holds the value of the "body_override" field.
 	BodyOverride map[string]interface{} `json:"body_override,omitempty"`
+	// Linked group id, used to join V2 metrics and group rate multipliers
+	GroupID *int64 `json:"group_id,omitempty"`
+	// Show this monitor on the user-facing provider hall page
+	PublicVisible bool `json:"public_visible,omitempty"`
+	// Short note rendered under the group name on the provider hall
+	PublicNote string `json:"public_note,omitempty"`
+	// Optional external detection report link; hidden when empty
+	ReportURL string `json:"report_url,omitempty"`
+	// Baseline probe input token count; deviation signals upstream token inflation
+	ExpectedInputTokens *int `json:"expected_input_tokens,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ChannelMonitorQuery when eager-loading is set.
 	Edges        ChannelMonitorEdges `json:"edges"`
@@ -116,11 +126,11 @@ func (*ChannelMonitor) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case channelmonitor.FieldExtraModels, channelmonitor.FieldExtraHeaders, channelmonitor.FieldBodyOverride:
 			values[i] = new([]byte)
-		case channelmonitor.FieldEnabled:
+		case channelmonitor.FieldEnabled, channelmonitor.FieldPublicVisible:
 			values[i] = new(sql.NullBool)
-		case channelmonitor.FieldID, channelmonitor.FieldAccountID, channelmonitor.FieldIntervalSeconds, channelmonitor.FieldJitterSeconds, channelmonitor.FieldCreatedBy, channelmonitor.FieldTemplateID:
+		case channelmonitor.FieldID, channelmonitor.FieldAccountID, channelmonitor.FieldIntervalSeconds, channelmonitor.FieldJitterSeconds, channelmonitor.FieldCreatedBy, channelmonitor.FieldTemplateID, channelmonitor.FieldGroupID, channelmonitor.FieldExpectedInputTokens:
 			values[i] = new(sql.NullInt64)
-		case channelmonitor.FieldName, channelmonitor.FieldProvider, channelmonitor.FieldCheckMode, channelmonitor.FieldAPIMode, channelmonitor.FieldEndpoint, channelmonitor.FieldAPIKeyEncrypted, channelmonitor.FieldPrimaryModel, channelmonitor.FieldGroupName, channelmonitor.FieldBodyOverrideMode:
+		case channelmonitor.FieldName, channelmonitor.FieldProvider, channelmonitor.FieldCheckMode, channelmonitor.FieldAPIMode, channelmonitor.FieldEndpoint, channelmonitor.FieldAPIKeyEncrypted, channelmonitor.FieldPrimaryModel, channelmonitor.FieldGroupName, channelmonitor.FieldBodyOverrideMode, channelmonitor.FieldPublicNote, channelmonitor.FieldReportURL:
 			values[i] = new(sql.NullString)
 		case channelmonitor.FieldCreatedAt, channelmonitor.FieldUpdatedAt, channelmonitor.FieldLastCheckedAt:
 			values[i] = new(sql.NullTime)
@@ -280,6 +290,38 @@ func (_m *ChannelMonitor) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field body_override: %w", err)
 				}
 			}
+		case channelmonitor.FieldGroupID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field group_id", values[i])
+			} else if value.Valid {
+				_m.GroupID = new(int64)
+				*_m.GroupID = value.Int64
+			}
+		case channelmonitor.FieldPublicVisible:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field public_visible", values[i])
+			} else if value.Valid {
+				_m.PublicVisible = value.Bool
+			}
+		case channelmonitor.FieldPublicNote:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field public_note", values[i])
+			} else if value.Valid {
+				_m.PublicNote = value.String
+			}
+		case channelmonitor.FieldReportURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field report_url", values[i])
+			} else if value.Valid {
+				_m.ReportURL = value.String
+			}
+		case channelmonitor.FieldExpectedInputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field expected_input_tokens", values[i])
+			} else if value.Valid {
+				_m.ExpectedInputTokens = new(int)
+				*_m.ExpectedInputTokens = int(value.Int64)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -398,6 +440,25 @@ func (_m *ChannelMonitor) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("body_override=")
 	builder.WriteString(fmt.Sprintf("%v", _m.BodyOverride))
+	builder.WriteString(", ")
+	if v := _m.GroupID; v != nil {
+		builder.WriteString("group_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("public_visible=")
+	builder.WriteString(fmt.Sprintf("%v", _m.PublicVisible))
+	builder.WriteString(", ")
+	builder.WriteString("public_note=")
+	builder.WriteString(_m.PublicNote)
+	builder.WriteString(", ")
+	builder.WriteString("report_url=")
+	builder.WriteString(_m.ReportURL)
+	builder.WriteString(", ")
+	if v := _m.ExpectedInputTokens; v != nil {
+		builder.WriteString("expected_input_tokens=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }
