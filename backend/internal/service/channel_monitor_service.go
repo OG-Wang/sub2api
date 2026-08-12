@@ -182,6 +182,15 @@ func (s *ChannelMonitorService) Create(ctx context.Context, p ChannelMonitorCrea
 		BodyOverride:     p.BodyOverride,
 		CheckMode:        checkMode,
 		AccountID:        cloneInt64Pointer(p.AccountID),
+
+		GroupID:             p.GroupID,
+		PublicVisible:       p.PublicVisible,
+		PublicNote:          p.PublicNote,
+		ReportURL:           p.ReportURL,
+		ExpectedInputTokens: p.ExpectedInputTokens,
+	}
+	if err := validateMonitorPublicProfile(m); err != nil {
+		return nil, err
 	}
 	if err := s.repo.Create(ctx, m); err != nil {
 		return nil, fmt.Errorf("create channel monitor: %w", err)
@@ -250,6 +259,14 @@ func (s *ChannelMonitorService) Duplicate(
 		CheckMode:            defaultCheckMode(source.CheckMode),
 		AccountID:            cloneInt64Pointer(source.AccountID),
 		DuplicateOperationID: operationID,
+
+		// 副本沿用大厅配置，但强制不公开展示：副本创建时是 disabled 状态，
+		// 没有任何探测数据，直接出现在大厅里只会是一行空数据。
+		GroupID:             cloneInt64Pointer(source.GroupID),
+		PublicVisible:       false,
+		PublicNote:          source.PublicNote,
+		ReportURL:           source.ReportURL,
+		ExpectedInputTokens: cloneIntPointer(source.ExpectedInputTokens),
 	}
 	if err := s.repo.Create(ctx, duplicate); err != nil {
 		return nil, fmt.Errorf("duplicate channel monitor: %w", err)
@@ -960,6 +977,10 @@ func applyMonitorUpdate(existing *ChannelMonitor, p ChannelMonitorUpdateParams) 
 		if err := validateJitter(existing.JitterSeconds, existing.IntervalSeconds); err != nil {
 			return err
 		}
+	}
+	applyMonitorPublicProfileUpdate(existing, p)
+	if err := validateMonitorPublicProfile(existing); err != nil {
+		return err
 	}
 	return applyMonitorAdvancedUpdate(existing, p, providerChanged)
 }

@@ -107,6 +107,39 @@ func (ChannelMonitor) Fields() []ent.Field {
 		// body_override: 同 ChannelMonitorRequestTemplate.body_override
 		field.JSON("body_override", map[string]any{}).
 			Optional(),
+
+		// ---- 供应商大厅（Provider Hall）字段 ----
+
+		// group_id: 关联的真实分组 ID。历史上只有 group_name 字符串，
+		// 无法与 V2 被动统计（按 group_id 聚合）和分组倍率对齐，故新增此关联键。
+		// 刻意不建 ent edge / 外键：避免在既有表上加 FK 约束，
+		// 分组被删除时留下悬空 ID，展示层回退到 group_name 字符串即可。
+		field.Int64("group_id").
+			Optional().
+			Nillable().
+			Comment("Linked group id, used to join V2 metrics and group rate multipliers"),
+		// public_visible: 是否在用户端供应商大厅展示。默认 false 是安全默认，
+		// 避免升级后把所有既有监控项一次性曝光给用户。
+		field.Bool("public_visible").
+			Default(false).
+			Comment("Show this monitor on the user-facing provider hall page"),
+		field.String("public_note").
+			Optional().
+			Default("").
+			MaxLen(200).
+			Comment("Short note rendered under the group name on the provider hall"),
+		field.String("report_url").
+			Optional().
+			Default("").
+			MaxLen(500).
+			Comment("Optional external detection report link; hidden when empty"),
+		// expected_input_tokens: 探测请求的输入 token 基线。
+		// 探测 prompt 长度恒定，实测值显著高于基线说明上游注入了额外内容。
+		// 留空表示走自动学习（取历史众数）。
+		field.Int("expected_input_tokens").
+			Optional().
+			Nillable().
+			Comment("Baseline probe input token count; deviation signals upstream token inflation"),
 	}
 }
 
@@ -133,5 +166,8 @@ func (ChannelMonitor) Indexes() []ent.Index {
 		index.Fields("group_name"),
 		index.Fields("template_id"),
 		index.Fields("account_id"),
+		// 用户端供应商大厅只查已展示且启用的监控项。
+		index.Fields("public_visible", "enabled"),
+		index.Fields("group_id"),
 	}
 }
