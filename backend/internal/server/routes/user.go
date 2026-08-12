@@ -142,6 +142,14 @@ func RegisterUserRoutes(
 			monitors.GET("/:id/status", h.ChannelMonitor.GetStatus)
 		}
 
+		// 供应商大厅（用户只读）。需要 hybrid 模式：既读 V1 探测结果，
+		// 也读 V2 用户指标，缺一半的页面没有意义。
+		providerHall := authenticated.Group("/provider-hall")
+		providerHall.Use(panelRateLimiter.Heavy())
+		{
+			providerHall.GET("/monitors", h.ProviderHall.List)
+		}
+
 		// V2 passive views require feature on + mode=v2.
 		monitorV2 := authenticated.Group("/channel-monitor-v2")
 		monitorV2.Use(panelRateLimiter.Heavy())
