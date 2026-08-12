@@ -31,6 +31,12 @@ const (
 	FieldQuota = "quota"
 	// FieldCheckedAt holds the string denoting the checked_at field in the database.
 	FieldCheckedAt = "checked_at"
+	// FieldTtftMs holds the string denoting the ttft_ms field in the database.
+	FieldTtftMs = "ttft_ms"
+	// FieldInputTokens holds the string denoting the input_tokens field in the database.
+	FieldInputTokens = "input_tokens"
+	// FieldOutputTokens holds the string denoting the output_tokens field in the database.
+	FieldOutputTokens = "output_tokens"
 	// EdgeMonitor holds the string denoting the monitor edge name in mutations.
 	EdgeMonitor = "monitor"
 	// Table holds the table name of the channelmonitorhistory in the database.
@@ -55,6 +61,9 @@ var Columns = []string{
 	FieldMessage,
 	FieldQuota,
 	FieldCheckedAt,
+	FieldTtftMs,
+	FieldInputTokens,
+	FieldOutputTokens,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -144,6 +153,21 @@ func ByMessage(opts ...sql.OrderTermOption) OrderOption {
 // ByCheckedAt orders the results by the checked_at field.
 func ByCheckedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCheckedAt, opts...).ToFunc()
+}
+
+// ByTtftMs orders the results by the ttft_ms field.
+func ByTtftMs(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTtftMs, opts...).ToFunc()
+}
+
+// ByInputTokens orders the results by the input_tokens field.
+func ByInputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldInputTokens, opts...).ToFunc()
+}
+
+// ByOutputTokens orders the results by the output_tokens field.
+func ByOutputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOutputTokens, opts...).ToFunc()
 }
 
 // ByMonitorField orders the results by monitor field.

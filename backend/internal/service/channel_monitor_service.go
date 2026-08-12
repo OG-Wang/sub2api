@@ -688,6 +688,9 @@ func (s *ChannelMonitorService) persistCheckResults(ctx context.Context, m *Chan
 			Message:       r.Message,
 			CheckedAt:     r.CheckedAt,
 			Quota:         r.Quota,
+			TTFTMs:        r.TTFTMs,
+			InputTokens:   r.InputTokens,
+			OutputTokens:  r.OutputTokens,
 		})
 	}
 	if err := s.repo.InsertHistoryBatch(ctx, rows); err != nil {

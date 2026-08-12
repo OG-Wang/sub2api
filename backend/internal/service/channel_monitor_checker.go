@@ -86,6 +86,9 @@ func runCheckForModel(ctx context.Context, provider, endpoint, apiKey, model str
 		return res
 	}
 
+	// 2xx 才取用量：错误响应里没有 usage，取了也只是噪声。
+	res.InputTokens, res.OutputTokens = extractMonitorUsage(provider, checkAPIMode(opts), rawBody)
+
 	// Replace 模式：跳过 challenge 校验（用户 body 是静态的，challenge 没法嵌入）。
 	// 改用「HTTP 2xx + 响应文本（adapter.textPath 抽取）非空」作为 operational 判定。
 	// 响应文本为空则降级为 failed（视为上游回了 200 但没实际内容）。
