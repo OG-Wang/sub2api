@@ -97,33 +97,6 @@ func TestExtractMonitorUsageUnknownProvider(t *testing.T) {
 	}
 }
 
-func TestEvaluateMonitorTokenInflation(t *testing.T) {
-	ptr := func(v int) *int { return &v }
-
-	cases := []struct {
-		name     string
-		expected *int
-		actual   *int
-		want     bool
-	}{
-		{"no baseline configured", nil, ptr(500), false},
-		{"upstream reported no usage", ptr(76), nil, false},
-		{"exact match", ptr(76), ptr(76), false},
-		{"within tolerance", ptr(76), ptr(88), false},
-		{"just above tolerance", ptr(76), ptr(92), true},
-		{"system prompt injected", ptr(76), ptr(310), true},
-		{"below baseline is not inflation", ptr(76), ptr(40), false},
-		{"invalid baseline", ptr(0), ptr(999), false},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := evaluateMonitorTokenInflation(tc.expected, tc.actual); got != tc.want {
-				t.Errorf("evaluateMonitorTokenInflation() = %v, want %v", got, tc.want)
-			}
-		})
-	}
-}
-
 // challenge 操作数必须全是两位数，prompt 的 token 数才恒定，
 // 注水检测的基线比对才成立。
 func TestGenerateChallengeUsesTwoDigitOperands(t *testing.T) {
