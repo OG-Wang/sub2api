@@ -191,6 +191,10 @@ type UserMonitorTimelinePoint struct {
 	LatencyMs     *int      `json:"latency_ms"`
 	PingLatencyMs *int      `json:"ping_latency_ms"`
 	CheckedAt     time.Time `json:"checked_at"`
+	// 以下三项供供应商大厅的曲线切换「首Token / TPS / 输入Token」使用。
+	TTFTMs       *int `json:"ttft_ms"`
+	InputTokens  *int `json:"input_tokens"`
+	OutputTokens *int `json:"output_tokens"`
 }
 
 // ExtraModelStatus 附加模型最近一次状态。
