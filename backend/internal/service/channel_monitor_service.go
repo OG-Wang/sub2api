@@ -29,6 +29,9 @@ type ChannelMonitorRepository interface {
 
 	// 调度器辅助
 	ListEnabled(ctx context.Context) ([]*ChannelMonitor, error)
+	// ListProviderHall 列出用户端供应商大厅要展示的监控项（enabled 且 public_visible），
+	// 顺带带出关联分组的 platform / name（分组已删除时为空）。
+	ListProviderHall(ctx context.Context) ([]*ChannelMonitorHallRow, error)
 	MarkChecked(ctx context.Context, id int64, checkedAt time.Time) error
 	InsertHistoryBatch(ctx context.Context, rows []*ChannelMonitorHistoryRow) error
 	DeleteHistoryBefore(ctx context.Context, before time.Time) (int64, error)
