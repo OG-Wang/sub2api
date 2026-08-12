@@ -137,6 +137,9 @@ type channelMonitorCheckResultResponse struct {
 	TTFTMs        *int   `json:"ttft_ms"`
 	InputTokens   *int   `json:"input_tokens"`
 	OutputTokens  *int   `json:"output_tokens"`
+	// ExpectedInputTokens 本地算出的应计输入 token，供管理员与实测值对照。
+	ExpectedInputTokens *int `json:"expected_input_tokens"`
+	InputTokensInflated bool `json:"input_tokens_inflated"`
 }
 
 type channelMonitorHistoryItemResponse struct {
@@ -218,6 +221,9 @@ func checkResultToResponse(r *service.CheckResult) channelMonitorCheckResultResp
 		TTFTMs:        r.TTFTMs,
 		InputTokens:   r.InputTokens,
 		OutputTokens:  r.OutputTokens,
+
+		ExpectedInputTokens: r.ExpectedInputTokens,
+		InputTokensInflated: r.InputTokensInflated,
 	}
 }
 

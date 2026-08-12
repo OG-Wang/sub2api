@@ -120,6 +120,12 @@ export interface CheckResult {
   ping_latency_ms: number | null
   message: string
   checked_at: string
+  /** 首 token 耗时，仅流式探测可得；非流式恒为 null */
+  ttft_ms: number | null
+  /** 上游报告的输入 token 数，null 表示上游未返回 usage */
+  input_tokens: number | null
+  /** 上游报告的输出 token 数 */
+  output_tokens: number | null
 }
 
 export interface RunNowResponse {

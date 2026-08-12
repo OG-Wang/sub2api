@@ -50,6 +50,17 @@ type CheckOptions struct {
 	// BodyOverride 在 merge 模式下做浅合并（key 命中黑名单时静默丢弃），
 	// 在 replace 模式下直接当作完整 body。
 	BodyOverride map[string]any
+	// ExpectedInputTokens 管理员手填的输入 token 基线，覆盖本地算出的参考值。
+	// nil 表示用本地计算结果（绝大多数情况）。
+	ExpectedInputTokens *int
+}
+
+// expectedInputTokensOverride 取管理员手填的基线，nil opts 视为未设置。
+func expectedInputTokensOverride(opts *CheckOptions) *int {
+	if opts == nil {
+		return nil
+	}
+	return opts.ExpectedInputTokens
 }
 
 // runCheckForModel 对单个 (provider, model) 做一次完整检测。
@@ -87,7 +98,20 @@ func runCheckForModel(ctx context.Context, provider, endpoint, apiKey, model str
 	}
 
 	// 2xx 才取用量：错误响应里没有 usage，取了也只是噪声。
-	res.InputTokens, res.OutputTokens = extractMonitorUsage(provider, checkAPIMode(opts), rawBody)
+	apiMode := checkAPIMode(opts)
+	res.InputTokens, res.OutputTokens = extractMonitorUsage(provider, apiMode, rawBody)
+
+	// 比对上游报的输入 token 与本地算出的真值。
+	// replace 模式下 body 完全由用户提供，challenge 没有参与请求，
+	// 本地参考值失去意义，跳过判定。
+	if mode != MonitorBodyOverrideModeReplace {
+		ref := monitorExpectedInputTokens(provider, apiMode, model, challenge.Prompt)
+		res.ExpectedInputTokens = &ref.Expected
+		if verdict := evaluateMonitorInputTokens(ref, res.InputTokens, expectedInputTokensOverride(opts)); verdict != nil {
+			res.InputTokensInflated = verdict.Inflated
+			res.InputTokenWarning = monitorInputTokenWarning(verdict)
+		}
+	}
 
 	// Replace 模式：跳过 challenge 校验（用户 body 是静态的，challenge 没法嵌入）。
 	// 改用「HTTP 2xx + 响应文本（adapter.textPath 抽取）非空」作为 operational 判定。
@@ -107,7 +131,23 @@ func runCheckForModel(ctx context.Context, provider, endpoint, apiKey, model str
 		return res
 	}
 
-	return finalizeOperationalOrDegraded(res, latency, latencyMs)
+	return appendMonitorInputTokenWarning(finalizeOperationalOrDegraded(res, latency, latencyMs))
+}
+
+// appendMonitorInputTokenWarning 把注水告警并进 message，使其随历史记录落库。
+//
+// 刻意不改 Status：注水是计费问题，渠道本身是「可用」的。
+// 把它降级成 failed 会让可用率曲线失真，掩盖真正的可用性故障。
+func appendMonitorInputTokenWarning(res *CheckResult) *CheckResult {
+	if res == nil || res.InputTokenWarning == "" {
+		return res
+	}
+	if res.Message == "" {
+		res.Message = truncateMessage(res.InputTokenWarning)
+		return res
+	}
+	res.Message = truncateMessage(res.Message + "; " + res.InputTokenWarning)
+	return res
 }
 
 // finalizeOperationalOrDegraded 负责走到最后一步的 operational/degraded 判定。
