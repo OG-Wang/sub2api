@@ -501,6 +501,17 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/providers',
+    name: 'ProviderHall',
+    component: () => import('@/views/user/ProviderHallView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: false,
+      title: 'Provider Hall',
+      titleKey: 'nav.providerHall'
+    }
+  },
+  {
     path: '/admin/subscriptions',
     name: 'AdminSubscriptions',
     component: () => import('@/views/admin/SubscriptionsView.vue'),
