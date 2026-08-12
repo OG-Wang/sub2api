@@ -42,8 +42,11 @@ const (
 	// 又给 "upstream HTTP <status>: " 前缀留出余量，避免最终被 monitorMessageMaxBytes (500) 截得太狠。
 	monitorErrorBodySnippetMaxBytes = 300
 	// monitorChallengeMin / monitorChallengeMax challenge 操作数范围。
-	monitorChallengeMin = 1
-	monitorChallengeMax = 50
+	// 固定为两位数：prompt 的 token 数因此在任何 tokenizer 下都恒定，
+	// 让实测 input_tokens 可以直接和基线比对，用来识别上游注水
+	// （注入 system prompt / 虚报输入用量）。
+	monitorChallengeMin = 10
+	monitorChallengeMax = 49
 
 	// providerOpenAIPath OpenAI Chat Completions 路径（Kimi / DeepSeek 同为 OpenAI 兼容）。
 	providerOpenAIPath = "/v1/chat/completions"
