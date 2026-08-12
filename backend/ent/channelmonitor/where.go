@@ -130,6 +130,31 @@ func BodyOverrideMode(v string) predicate.ChannelMonitor {
 	return predicate.ChannelMonitor(sql.FieldEQ(FieldBodyOverrideMode, v))
 }
 
+// GroupID applies equality check predicate on the "group_id" field. It's identical to GroupIDEQ.
+func GroupID(v int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldGroupID, v))
+}
+
+// PublicVisible applies equality check predicate on the "public_visible" field. It's identical to PublicVisibleEQ.
+func PublicVisible(v bool) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldPublicVisible, v))
+}
+
+// PublicNote applies equality check predicate on the "public_note" field. It's identical to PublicNoteEQ.
+func PublicNote(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldPublicNote, v))
+}
+
+// ReportURL applies equality check predicate on the "report_url" field. It's identical to ReportURLEQ.
+func ReportURL(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldReportURL, v))
+}
+
+// ExpectedInputTokens applies equality check predicate on the "expected_input_tokens" field. It's identical to ExpectedInputTokensEQ.
+func ExpectedInputTokens(v int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldExpectedInputTokens, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.ChannelMonitor {
 	return predicate.ChannelMonitor(sql.FieldEQ(FieldCreatedAt, v))
@@ -913,6 +938,266 @@ func BodyOverrideIsNil() predicate.ChannelMonitor {
 // BodyOverrideNotNil applies the NotNil predicate on the "body_override" field.
 func BodyOverrideNotNil() predicate.ChannelMonitor {
 	return predicate.ChannelMonitor(sql.FieldNotNull(FieldBodyOverride))
+}
+
+// GroupIDEQ applies the EQ predicate on the "group_id" field.
+func GroupIDEQ(v int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldGroupID, v))
+}
+
+// GroupIDNEQ applies the NEQ predicate on the "group_id" field.
+func GroupIDNEQ(v int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNEQ(FieldGroupID, v))
+}
+
+// GroupIDIn applies the In predicate on the "group_id" field.
+func GroupIDIn(vs ...int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIn(FieldGroupID, vs...))
+}
+
+// GroupIDNotIn applies the NotIn predicate on the "group_id" field.
+func GroupIDNotIn(vs ...int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotIn(FieldGroupID, vs...))
+}
+
+// GroupIDGT applies the GT predicate on the "group_id" field.
+func GroupIDGT(v int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGT(FieldGroupID, v))
+}
+
+// GroupIDGTE applies the GTE predicate on the "group_id" field.
+func GroupIDGTE(v int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGTE(FieldGroupID, v))
+}
+
+// GroupIDLT applies the LT predicate on the "group_id" field.
+func GroupIDLT(v int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLT(FieldGroupID, v))
+}
+
+// GroupIDLTE applies the LTE predicate on the "group_id" field.
+func GroupIDLTE(v int64) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLTE(FieldGroupID, v))
+}
+
+// GroupIDIsNil applies the IsNil predicate on the "group_id" field.
+func GroupIDIsNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIsNull(FieldGroupID))
+}
+
+// GroupIDNotNil applies the NotNil predicate on the "group_id" field.
+func GroupIDNotNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotNull(FieldGroupID))
+}
+
+// PublicVisibleEQ applies the EQ predicate on the "public_visible" field.
+func PublicVisibleEQ(v bool) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldPublicVisible, v))
+}
+
+// PublicVisibleNEQ applies the NEQ predicate on the "public_visible" field.
+func PublicVisibleNEQ(v bool) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNEQ(FieldPublicVisible, v))
+}
+
+// PublicNoteEQ applies the EQ predicate on the "public_note" field.
+func PublicNoteEQ(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldPublicNote, v))
+}
+
+// PublicNoteNEQ applies the NEQ predicate on the "public_note" field.
+func PublicNoteNEQ(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNEQ(FieldPublicNote, v))
+}
+
+// PublicNoteIn applies the In predicate on the "public_note" field.
+func PublicNoteIn(vs ...string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIn(FieldPublicNote, vs...))
+}
+
+// PublicNoteNotIn applies the NotIn predicate on the "public_note" field.
+func PublicNoteNotIn(vs ...string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotIn(FieldPublicNote, vs...))
+}
+
+// PublicNoteGT applies the GT predicate on the "public_note" field.
+func PublicNoteGT(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGT(FieldPublicNote, v))
+}
+
+// PublicNoteGTE applies the GTE predicate on the "public_note" field.
+func PublicNoteGTE(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGTE(FieldPublicNote, v))
+}
+
+// PublicNoteLT applies the LT predicate on the "public_note" field.
+func PublicNoteLT(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLT(FieldPublicNote, v))
+}
+
+// PublicNoteLTE applies the LTE predicate on the "public_note" field.
+func PublicNoteLTE(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLTE(FieldPublicNote, v))
+}
+
+// PublicNoteContains applies the Contains predicate on the "public_note" field.
+func PublicNoteContains(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldContains(FieldPublicNote, v))
+}
+
+// PublicNoteHasPrefix applies the HasPrefix predicate on the "public_note" field.
+func PublicNoteHasPrefix(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldHasPrefix(FieldPublicNote, v))
+}
+
+// PublicNoteHasSuffix applies the HasSuffix predicate on the "public_note" field.
+func PublicNoteHasSuffix(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldHasSuffix(FieldPublicNote, v))
+}
+
+// PublicNoteIsNil applies the IsNil predicate on the "public_note" field.
+func PublicNoteIsNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIsNull(FieldPublicNote))
+}
+
+// PublicNoteNotNil applies the NotNil predicate on the "public_note" field.
+func PublicNoteNotNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotNull(FieldPublicNote))
+}
+
+// PublicNoteEqualFold applies the EqualFold predicate on the "public_note" field.
+func PublicNoteEqualFold(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEqualFold(FieldPublicNote, v))
+}
+
+// PublicNoteContainsFold applies the ContainsFold predicate on the "public_note" field.
+func PublicNoteContainsFold(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldContainsFold(FieldPublicNote, v))
+}
+
+// ReportURLEQ applies the EQ predicate on the "report_url" field.
+func ReportURLEQ(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldReportURL, v))
+}
+
+// ReportURLNEQ applies the NEQ predicate on the "report_url" field.
+func ReportURLNEQ(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNEQ(FieldReportURL, v))
+}
+
+// ReportURLIn applies the In predicate on the "report_url" field.
+func ReportURLIn(vs ...string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIn(FieldReportURL, vs...))
+}
+
+// ReportURLNotIn applies the NotIn predicate on the "report_url" field.
+func ReportURLNotIn(vs ...string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotIn(FieldReportURL, vs...))
+}
+
+// ReportURLGT applies the GT predicate on the "report_url" field.
+func ReportURLGT(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGT(FieldReportURL, v))
+}
+
+// ReportURLGTE applies the GTE predicate on the "report_url" field.
+func ReportURLGTE(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGTE(FieldReportURL, v))
+}
+
+// ReportURLLT applies the LT predicate on the "report_url" field.
+func ReportURLLT(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLT(FieldReportURL, v))
+}
+
+// ReportURLLTE applies the LTE predicate on the "report_url" field.
+func ReportURLLTE(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLTE(FieldReportURL, v))
+}
+
+// ReportURLContains applies the Contains predicate on the "report_url" field.
+func ReportURLContains(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldContains(FieldReportURL, v))
+}
+
+// ReportURLHasPrefix applies the HasPrefix predicate on the "report_url" field.
+func ReportURLHasPrefix(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldHasPrefix(FieldReportURL, v))
+}
+
+// ReportURLHasSuffix applies the HasSuffix predicate on the "report_url" field.
+func ReportURLHasSuffix(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldHasSuffix(FieldReportURL, v))
+}
+
+// ReportURLIsNil applies the IsNil predicate on the "report_url" field.
+func ReportURLIsNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIsNull(FieldReportURL))
+}
+
+// ReportURLNotNil applies the NotNil predicate on the "report_url" field.
+func ReportURLNotNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotNull(FieldReportURL))
+}
+
+// ReportURLEqualFold applies the EqualFold predicate on the "report_url" field.
+func ReportURLEqualFold(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEqualFold(FieldReportURL, v))
+}
+
+// ReportURLContainsFold applies the ContainsFold predicate on the "report_url" field.
+func ReportURLContainsFold(v string) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldContainsFold(FieldReportURL, v))
+}
+
+// ExpectedInputTokensEQ applies the EQ predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensEQ(v int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldEQ(FieldExpectedInputTokens, v))
+}
+
+// ExpectedInputTokensNEQ applies the NEQ predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensNEQ(v int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNEQ(FieldExpectedInputTokens, v))
+}
+
+// ExpectedInputTokensIn applies the In predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensIn(vs ...int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIn(FieldExpectedInputTokens, vs...))
+}
+
+// ExpectedInputTokensNotIn applies the NotIn predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensNotIn(vs ...int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotIn(FieldExpectedInputTokens, vs...))
+}
+
+// ExpectedInputTokensGT applies the GT predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensGT(v int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGT(FieldExpectedInputTokens, v))
+}
+
+// ExpectedInputTokensGTE applies the GTE predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensGTE(v int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldGTE(FieldExpectedInputTokens, v))
+}
+
+// ExpectedInputTokensLT applies the LT predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensLT(v int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLT(FieldExpectedInputTokens, v))
+}
+
+// ExpectedInputTokensLTE applies the LTE predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensLTE(v int) predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldLTE(FieldExpectedInputTokens, v))
+}
+
+// ExpectedInputTokensIsNil applies the IsNil predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensIsNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldIsNull(FieldExpectedInputTokens))
+}
+
+// ExpectedInputTokensNotNil applies the NotNil predicate on the "expected_input_tokens" field.
+func ExpectedInputTokensNotNil() predicate.ChannelMonitor {
+	return predicate.ChannelMonitor(sql.FieldNotNull(FieldExpectedInputTokens))
 }
 
 // HasHistory applies the HasEdge predicate on the "history" edge.

@@ -53,6 +53,13 @@ type channelMonitorCreateRequest struct {
 	ExtraHeaders     map[string]string `json:"extra_headers"`
 	BodyOverrideMode string            `json:"body_override_mode" binding:"omitempty,oneof=off merge replace"`
 	BodyOverride     map[string]any    `json:"body_override"`
+
+	// 供应商大厅字段
+	GroupID             *int64 `json:"group_id"`
+	PublicVisible       *bool  `json:"public_visible"`
+	PublicNote          string `json:"public_note" binding:"max=200"`
+	ReportURL           string `json:"report_url" binding:"max=500"`
+	ExpectedInputTokens *int   `json:"expected_input_tokens"`
 }
 
 type channelMonitorUpdateRequest struct {
@@ -72,6 +79,16 @@ type channelMonitorUpdateRequest struct {
 	ExtraHeaders     *map[string]string `json:"extra_headers"`
 	BodyOverrideMode *string            `json:"body_override_mode" binding:"omitempty,oneof=off merge replace"`
 	BodyOverride     *map[string]any    `json:"body_override"`
+
+	// 供应商大厅字段。GroupID / ExpectedInputTokens 用显式 clear 标志表达置空，
+	// 与上面 ClearTemplate 保持同一套路。
+	GroupID                  *int64  `json:"group_id"`
+	ClearGroupID             bool    `json:"clear_group_id"`
+	PublicVisible            *bool   `json:"public_visible"`
+	PublicNote               *string `json:"public_note" binding:"omitempty,max=200"`
+	ReportURL                *string `json:"report_url" binding:"omitempty,max=500"`
+	ExpectedInputTokens      *int    `json:"expected_input_tokens"`
+	ClearExpectedInputTokens bool    `json:"clear_expected_input_tokens"`
 }
 
 type channelMonitorResponse struct {
@@ -101,6 +118,13 @@ type channelMonitorResponse struct {
 	ExtraHeaders     map[string]string `json:"extra_headers"`
 	BodyOverrideMode string            `json:"body_override_mode"`
 	BodyOverride     map[string]any    `json:"body_override"`
+
+	// 供应商大厅字段
+	GroupID             *int64 `json:"group_id"`
+	PublicVisible       bool   `json:"public_visible"`
+	PublicNote          string `json:"public_note"`
+	ReportURL           string `json:"report_url"`
+	ExpectedInputTokens *int   `json:"expected_input_tokens"`
 }
 
 type channelMonitorCheckResultResponse struct {
@@ -163,6 +187,11 @@ func channelMonitorToResponse(m *service.ChannelMonitor) *channelMonitorResponse
 		ExtraHeaders:        headers,
 		BodyOverrideMode:    m.BodyOverrideMode,
 		BodyOverride:        m.BodyOverride,
+		GroupID:             m.GroupID,
+		PublicVisible:       m.PublicVisible,
+		PublicNote:          m.PublicNote,
+		ReportURL:           m.ReportURL,
+		ExpectedInputTokens: m.ExpectedInputTokens,
 		// PrimaryStatus / PrimaryLatencyMs / Availability7d 由 List handler 在批量聚合后填充。
 	}
 	if m.LastCheckedAt != nil {
@@ -327,6 +356,12 @@ func (h *ChannelMonitorHandler) Create(c *gin.Context) {
 		ExtraHeaders:     req.ExtraHeaders,
 		BodyOverrideMode: req.BodyOverrideMode,
 		BodyOverride:     req.BodyOverride,
+
+		GroupID:             req.GroupID,
+		PublicVisible:       req.PublicVisible != nil && *req.PublicVisible,
+		PublicNote:          req.PublicNote,
+		ReportURL:           req.ReportURL,
+		ExpectedInputTokens: req.ExpectedInputTokens,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -421,6 +456,14 @@ func (h *ChannelMonitorHandler) Update(c *gin.Context) {
 		ExtraHeaders:     req.ExtraHeaders,
 		BodyOverrideMode: req.BodyOverrideMode,
 		BodyOverride:     req.BodyOverride,
+
+		GroupID:                  req.GroupID,
+		ClearGroupID:             req.ClearGroupID,
+		PublicVisible:            req.PublicVisible,
+		PublicNote:               req.PublicNote,
+		ReportURL:                req.ReportURL,
+		ExpectedInputTokens:      req.ExpectedInputTokens,
+		ClearExpectedInputTokens: req.ClearExpectedInputTokens,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

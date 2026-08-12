@@ -152,6 +152,20 @@
           />
         </div>
       </details>
+
+      <MonitorProviderHallConfig
+        :active="show"
+        :group-id="form.group_id"
+        :public-visible="form.public_visible"
+        :public-note="form.public_note"
+        :report-url="form.report_url"
+        :expected-input-tokens="form.expected_input_tokens"
+        @update:group-id="form.group_id = $event"
+        @update:public-visible="form.public_visible = $event"
+        @update:public-note="form.public_note = $event"
+        @update:report-url="form.report_url = $event"
+        @update:expected-input-tokens="form.expected_input_tokens = $event"
+      />
     </form>
 
     <template #footer>
@@ -209,6 +223,7 @@ import ModelTagInput from '@/components/admin/channel/ModelTagInput.vue'
 import { getPlatformTextClass } from '@/components/admin/channel/types'
 import MonitorKeyPickerDialog from '@/components/admin/monitor/MonitorKeyPickerDialog.vue'
 import MonitorAdvancedRequestConfig from '@/components/admin/monitor/MonitorAdvancedRequestConfig.vue'
+import MonitorProviderHallConfig from '@/components/admin/monitor/MonitorProviderHallConfig.vue'
 import ProviderIcon from '@/components/user/monitor/ProviderIcon.vue'
 import { useChannelMonitorFormat } from '@/composables/useChannelMonitorFormat'
 import {
@@ -272,6 +287,12 @@ interface MonitorForm {
   extra_headers: Record<string, string>
   body_override_mode: BodyOverrideMode
   body_override: Record<string, unknown> | null
+  // 供应商大厅
+  group_id: number | null
+  public_visible: boolean
+  public_note: string
+  report_url: string
+  expected_input_tokens: number | null
 }
 
 const form = reactive<MonitorForm>({
@@ -290,6 +311,11 @@ const form = reactive<MonitorForm>({
   extra_headers: {},
   body_override_mode: 'off',
   body_override: null,
+  group_id: null,
+  public_visible: false,
+  public_note: '',
+  report_url: '',
+  expected_input_tokens: null,
 })
 
 // jitter 上限与后端校验一致：interval - jitter 不得低于最小检测间隔 15 秒。
@@ -459,6 +485,11 @@ function resetForm() {
   form.extra_headers = {}
   form.body_override_mode = 'off'
   form.body_override = null
+  form.group_id = null
+  form.public_visible = false
+  form.public_note = ''
+  form.report_url = ''
+  form.expected_input_tokens = null
   suppressFormWatchers = false
 }
 
@@ -479,6 +510,11 @@ function loadFromMonitor(m: ChannelMonitor) {
   form.extra_headers = { ...(m.extra_headers || {}) }
   form.body_override_mode = m.body_override_mode || 'off'
   form.body_override = m.body_override ? { ...m.body_override } : null
+  form.group_id = m.group_id ?? null
+  form.public_visible = m.public_visible ?? false
+  form.public_note = m.public_note || ''
+  form.report_url = m.report_url || ''
+  form.expected_input_tokens = m.expected_input_tokens ?? null
   suppressFormWatchers = false
 }
 
@@ -545,6 +581,11 @@ function buildPayload(): CreateParams {
     extra_headers: form.extra_headers,
     body_override_mode: form.body_override_mode,
     body_override: form.body_override,
+    group_id: form.group_id,
+    public_visible: form.public_visible,
+    public_note: form.public_note.trim(),
+    report_url: form.report_url.trim(),
+    expected_input_tokens: form.expected_input_tokens,
   }
 }
 
@@ -571,6 +612,16 @@ async function handleSubmit() {
       if (form.template_id == null) {
         req.clear_template = true
         delete req.template_id
+      }
+      // group_id / expected_input_tokens 同理：pointer 语义下 null 要用显式 clear 标志，
+      // 否则后端会把它当成「未提供、不更新」，导致取消关联分组保存不生效。
+      if (form.group_id == null) {
+        req.clear_group_id = true
+        delete req.group_id
+      }
+      if (form.expected_input_tokens == null) {
+        req.clear_expected_input_tokens = true
+        delete req.expected_input_tokens
       }
       await adminAPI.channelMonitor.update(target.id, req)
       appStore.showSuccess(t('admin.channelMonitor.updateSuccess'))

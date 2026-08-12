@@ -14601,43 +14601,50 @@ func (m *BatchImageJobMutation) ResetEdge(name string) error {
 // ChannelMonitorMutation represents an operation that mutates the ChannelMonitor nodes in the graph.
 type ChannelMonitorMutation struct {
 	config
-	op                      Op
-	typ                     string
-	id                      *int64
-	created_at              *time.Time
-	updated_at              *time.Time
-	name                    *string
-	provider                *channelmonitor.Provider
-	api_mode                *string
-	endpoint                *string
-	api_key_encrypted       *string
-	primary_model           *string
-	extra_models            *[]string
-	appendextra_models      []string
-	group_name              *string
-	enabled                 *bool
-	interval_seconds        *int
-	addinterval_seconds     *int
-	jitter_seconds          *int
-	addjitter_seconds       *int
-	last_checked_at         *time.Time
-	created_by              *int64
-	addcreated_by           *int64
-	extra_headers           *map[string]string
-	body_override_mode      *string
-	body_override           *map[string]interface{}
-	clearedFields           map[string]struct{}
-	history                 map[int64]struct{}
-	removedhistory          map[int64]struct{}
-	clearedhistory          bool
-	daily_rollups           map[int64]struct{}
-	removeddaily_rollups    map[int64]struct{}
-	cleareddaily_rollups    bool
-	request_template        *int64
-	clearedrequest_template bool
-	done                    bool
-	oldValue                func(context.Context) (*ChannelMonitor, error)
-	predicates              []predicate.ChannelMonitor
+	op                       Op
+	typ                      string
+	id                       *int64
+	created_at               *time.Time
+	updated_at               *time.Time
+	name                     *string
+	provider                 *channelmonitor.Provider
+	api_mode                 *string
+	endpoint                 *string
+	api_key_encrypted        *string
+	primary_model            *string
+	extra_models             *[]string
+	appendextra_models       []string
+	group_name               *string
+	enabled                  *bool
+	interval_seconds         *int
+	addinterval_seconds      *int
+	jitter_seconds           *int
+	addjitter_seconds        *int
+	last_checked_at          *time.Time
+	created_by               *int64
+	addcreated_by            *int64
+	extra_headers            *map[string]string
+	body_override_mode       *string
+	body_override            *map[string]interface{}
+	group_id                 *int64
+	addgroup_id              *int64
+	public_visible           *bool
+	public_note              *string
+	report_url               *string
+	expected_input_tokens    *int
+	addexpected_input_tokens *int
+	clearedFields            map[string]struct{}
+	history                  map[int64]struct{}
+	removedhistory           map[int64]struct{}
+	clearedhistory           bool
+	daily_rollups            map[int64]struct{}
+	removeddaily_rollups     map[int64]struct{}
+	cleareddaily_rollups     bool
+	request_template         *int64
+	clearedrequest_template  bool
+	done                     bool
+	oldValue                 func(context.Context) (*ChannelMonitor, error)
+	predicates               []predicate.ChannelMonitor
 }
 
 var _ ent.Mutation = (*ChannelMonitorMutation)(nil)
@@ -15549,6 +15556,280 @@ func (m *ChannelMonitorMutation) ResetBodyOverride() {
 	delete(m.clearedFields, channelmonitor.FieldBodyOverride)
 }
 
+// SetGroupID sets the "group_id" field.
+func (m *ChannelMonitorMutation) SetGroupID(i int64) {
+	m.group_id = &i
+	m.addgroup_id = nil
+}
+
+// GroupID returns the value of the "group_id" field in the mutation.
+func (m *ChannelMonitorMutation) GroupID() (r int64, exists bool) {
+	v := m.group_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGroupID returns the old "group_id" field's value of the ChannelMonitor entity.
+// If the ChannelMonitor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorMutation) OldGroupID(ctx context.Context) (v *int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGroupID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGroupID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGroupID: %w", err)
+	}
+	return oldValue.GroupID, nil
+}
+
+// AddGroupID adds i to the "group_id" field.
+func (m *ChannelMonitorMutation) AddGroupID(i int64) {
+	if m.addgroup_id != nil {
+		*m.addgroup_id += i
+	} else {
+		m.addgroup_id = &i
+	}
+}
+
+// AddedGroupID returns the value that was added to the "group_id" field in this mutation.
+func (m *ChannelMonitorMutation) AddedGroupID() (r int64, exists bool) {
+	v := m.addgroup_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (m *ChannelMonitorMutation) ClearGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+	m.clearedFields[channelmonitor.FieldGroupID] = struct{}{}
+}
+
+// GroupIDCleared returns if the "group_id" field was cleared in this mutation.
+func (m *ChannelMonitorMutation) GroupIDCleared() bool {
+	_, ok := m.clearedFields[channelmonitor.FieldGroupID]
+	return ok
+}
+
+// ResetGroupID resets all changes to the "group_id" field.
+func (m *ChannelMonitorMutation) ResetGroupID() {
+	m.group_id = nil
+	m.addgroup_id = nil
+	delete(m.clearedFields, channelmonitor.FieldGroupID)
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (m *ChannelMonitorMutation) SetPublicVisible(b bool) {
+	m.public_visible = &b
+}
+
+// PublicVisible returns the value of the "public_visible" field in the mutation.
+func (m *ChannelMonitorMutation) PublicVisible() (r bool, exists bool) {
+	v := m.public_visible
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublicVisible returns the old "public_visible" field's value of the ChannelMonitor entity.
+// If the ChannelMonitor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorMutation) OldPublicVisible(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublicVisible is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublicVisible requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublicVisible: %w", err)
+	}
+	return oldValue.PublicVisible, nil
+}
+
+// ResetPublicVisible resets all changes to the "public_visible" field.
+func (m *ChannelMonitorMutation) ResetPublicVisible() {
+	m.public_visible = nil
+}
+
+// SetPublicNote sets the "public_note" field.
+func (m *ChannelMonitorMutation) SetPublicNote(s string) {
+	m.public_note = &s
+}
+
+// PublicNote returns the value of the "public_note" field in the mutation.
+func (m *ChannelMonitorMutation) PublicNote() (r string, exists bool) {
+	v := m.public_note
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublicNote returns the old "public_note" field's value of the ChannelMonitor entity.
+// If the ChannelMonitor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorMutation) OldPublicNote(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublicNote is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublicNote requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublicNote: %w", err)
+	}
+	return oldValue.PublicNote, nil
+}
+
+// ClearPublicNote clears the value of the "public_note" field.
+func (m *ChannelMonitorMutation) ClearPublicNote() {
+	m.public_note = nil
+	m.clearedFields[channelmonitor.FieldPublicNote] = struct{}{}
+}
+
+// PublicNoteCleared returns if the "public_note" field was cleared in this mutation.
+func (m *ChannelMonitorMutation) PublicNoteCleared() bool {
+	_, ok := m.clearedFields[channelmonitor.FieldPublicNote]
+	return ok
+}
+
+// ResetPublicNote resets all changes to the "public_note" field.
+func (m *ChannelMonitorMutation) ResetPublicNote() {
+	m.public_note = nil
+	delete(m.clearedFields, channelmonitor.FieldPublicNote)
+}
+
+// SetReportURL sets the "report_url" field.
+func (m *ChannelMonitorMutation) SetReportURL(s string) {
+	m.report_url = &s
+}
+
+// ReportURL returns the value of the "report_url" field in the mutation.
+func (m *ChannelMonitorMutation) ReportURL() (r string, exists bool) {
+	v := m.report_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReportURL returns the old "report_url" field's value of the ChannelMonitor entity.
+// If the ChannelMonitor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorMutation) OldReportURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReportURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReportURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReportURL: %w", err)
+	}
+	return oldValue.ReportURL, nil
+}
+
+// ClearReportURL clears the value of the "report_url" field.
+func (m *ChannelMonitorMutation) ClearReportURL() {
+	m.report_url = nil
+	m.clearedFields[channelmonitor.FieldReportURL] = struct{}{}
+}
+
+// ReportURLCleared returns if the "report_url" field was cleared in this mutation.
+func (m *ChannelMonitorMutation) ReportURLCleared() bool {
+	_, ok := m.clearedFields[channelmonitor.FieldReportURL]
+	return ok
+}
+
+// ResetReportURL resets all changes to the "report_url" field.
+func (m *ChannelMonitorMutation) ResetReportURL() {
+	m.report_url = nil
+	delete(m.clearedFields, channelmonitor.FieldReportURL)
+}
+
+// SetExpectedInputTokens sets the "expected_input_tokens" field.
+func (m *ChannelMonitorMutation) SetExpectedInputTokens(i int) {
+	m.expected_input_tokens = &i
+	m.addexpected_input_tokens = nil
+}
+
+// ExpectedInputTokens returns the value of the "expected_input_tokens" field in the mutation.
+func (m *ChannelMonitorMutation) ExpectedInputTokens() (r int, exists bool) {
+	v := m.expected_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpectedInputTokens returns the old "expected_input_tokens" field's value of the ChannelMonitor entity.
+// If the ChannelMonitor object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorMutation) OldExpectedInputTokens(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpectedInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpectedInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpectedInputTokens: %w", err)
+	}
+	return oldValue.ExpectedInputTokens, nil
+}
+
+// AddExpectedInputTokens adds i to the "expected_input_tokens" field.
+func (m *ChannelMonitorMutation) AddExpectedInputTokens(i int) {
+	if m.addexpected_input_tokens != nil {
+		*m.addexpected_input_tokens += i
+	} else {
+		m.addexpected_input_tokens = &i
+	}
+}
+
+// AddedExpectedInputTokens returns the value that was added to the "expected_input_tokens" field in this mutation.
+func (m *ChannelMonitorMutation) AddedExpectedInputTokens() (r int, exists bool) {
+	v := m.addexpected_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearExpectedInputTokens clears the value of the "expected_input_tokens" field.
+func (m *ChannelMonitorMutation) ClearExpectedInputTokens() {
+	m.expected_input_tokens = nil
+	m.addexpected_input_tokens = nil
+	m.clearedFields[channelmonitor.FieldExpectedInputTokens] = struct{}{}
+}
+
+// ExpectedInputTokensCleared returns if the "expected_input_tokens" field was cleared in this mutation.
+func (m *ChannelMonitorMutation) ExpectedInputTokensCleared() bool {
+	_, ok := m.clearedFields[channelmonitor.FieldExpectedInputTokens]
+	return ok
+}
+
+// ResetExpectedInputTokens resets all changes to the "expected_input_tokens" field.
+func (m *ChannelMonitorMutation) ResetExpectedInputTokens() {
+	m.expected_input_tokens = nil
+	m.addexpected_input_tokens = nil
+	delete(m.clearedFields, channelmonitor.FieldExpectedInputTokens)
+}
+
 // AddHistoryIDs adds the "history" edge to the ChannelMonitorHistory entity by ids.
 func (m *ChannelMonitorMutation) AddHistoryIDs(ids ...int64) {
 	if m.history == nil {
@@ -15731,7 +16012,7 @@ func (m *ChannelMonitorMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMonitorMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 24)
 	if m.created_at != nil {
 		fields = append(fields, channelmonitor.FieldCreatedAt)
 	}
@@ -15789,6 +16070,21 @@ func (m *ChannelMonitorMutation) Fields() []string {
 	if m.body_override != nil {
 		fields = append(fields, channelmonitor.FieldBodyOverride)
 	}
+	if m.group_id != nil {
+		fields = append(fields, channelmonitor.FieldGroupID)
+	}
+	if m.public_visible != nil {
+		fields = append(fields, channelmonitor.FieldPublicVisible)
+	}
+	if m.public_note != nil {
+		fields = append(fields, channelmonitor.FieldPublicNote)
+	}
+	if m.report_url != nil {
+		fields = append(fields, channelmonitor.FieldReportURL)
+	}
+	if m.expected_input_tokens != nil {
+		fields = append(fields, channelmonitor.FieldExpectedInputTokens)
+	}
 	return fields
 }
 
@@ -15835,6 +16131,16 @@ func (m *ChannelMonitorMutation) Field(name string) (ent.Value, bool) {
 		return m.BodyOverrideMode()
 	case channelmonitor.FieldBodyOverride:
 		return m.BodyOverride()
+	case channelmonitor.FieldGroupID:
+		return m.GroupID()
+	case channelmonitor.FieldPublicVisible:
+		return m.PublicVisible()
+	case channelmonitor.FieldPublicNote:
+		return m.PublicNote()
+	case channelmonitor.FieldReportURL:
+		return m.ReportURL()
+	case channelmonitor.FieldExpectedInputTokens:
+		return m.ExpectedInputTokens()
 	}
 	return nil, false
 }
@@ -15882,6 +16188,16 @@ func (m *ChannelMonitorMutation) OldField(ctx context.Context, name string) (ent
 		return m.OldBodyOverrideMode(ctx)
 	case channelmonitor.FieldBodyOverride:
 		return m.OldBodyOverride(ctx)
+	case channelmonitor.FieldGroupID:
+		return m.OldGroupID(ctx)
+	case channelmonitor.FieldPublicVisible:
+		return m.OldPublicVisible(ctx)
+	case channelmonitor.FieldPublicNote:
+		return m.OldPublicNote(ctx)
+	case channelmonitor.FieldReportURL:
+		return m.OldReportURL(ctx)
+	case channelmonitor.FieldExpectedInputTokens:
+		return m.OldExpectedInputTokens(ctx)
 	}
 	return nil, fmt.Errorf("unknown ChannelMonitor field %s", name)
 }
@@ -16024,6 +16340,41 @@ func (m *ChannelMonitorMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetBodyOverride(v)
 		return nil
+	case channelmonitor.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGroupID(v)
+		return nil
+	case channelmonitor.FieldPublicVisible:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublicVisible(v)
+		return nil
+	case channelmonitor.FieldPublicNote:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublicNote(v)
+		return nil
+	case channelmonitor.FieldReportURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReportURL(v)
+		return nil
+	case channelmonitor.FieldExpectedInputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpectedInputTokens(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitor field %s", name)
 }
@@ -16041,6 +16392,12 @@ func (m *ChannelMonitorMutation) AddedFields() []string {
 	if m.addcreated_by != nil {
 		fields = append(fields, channelmonitor.FieldCreatedBy)
 	}
+	if m.addgroup_id != nil {
+		fields = append(fields, channelmonitor.FieldGroupID)
+	}
+	if m.addexpected_input_tokens != nil {
+		fields = append(fields, channelmonitor.FieldExpectedInputTokens)
+	}
 	return fields
 }
 
@@ -16055,6 +16412,10 @@ func (m *ChannelMonitorMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedJitterSeconds()
 	case channelmonitor.FieldCreatedBy:
 		return m.AddedCreatedBy()
+	case channelmonitor.FieldGroupID:
+		return m.AddedGroupID()
+	case channelmonitor.FieldExpectedInputTokens:
+		return m.AddedExpectedInputTokens()
 	}
 	return nil, false
 }
@@ -16085,6 +16446,20 @@ func (m *ChannelMonitorMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddCreatedBy(v)
 		return nil
+	case channelmonitor.FieldGroupID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGroupID(v)
+		return nil
+	case channelmonitor.FieldExpectedInputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddExpectedInputTokens(v)
+		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitor numeric field %s", name)
 }
@@ -16104,6 +16479,18 @@ func (m *ChannelMonitorMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(channelmonitor.FieldBodyOverride) {
 		fields = append(fields, channelmonitor.FieldBodyOverride)
+	}
+	if m.FieldCleared(channelmonitor.FieldGroupID) {
+		fields = append(fields, channelmonitor.FieldGroupID)
+	}
+	if m.FieldCleared(channelmonitor.FieldPublicNote) {
+		fields = append(fields, channelmonitor.FieldPublicNote)
+	}
+	if m.FieldCleared(channelmonitor.FieldReportURL) {
+		fields = append(fields, channelmonitor.FieldReportURL)
+	}
+	if m.FieldCleared(channelmonitor.FieldExpectedInputTokens) {
+		fields = append(fields, channelmonitor.FieldExpectedInputTokens)
 	}
 	return fields
 }
@@ -16130,6 +16517,18 @@ func (m *ChannelMonitorMutation) ClearField(name string) error {
 		return nil
 	case channelmonitor.FieldBodyOverride:
 		m.ClearBodyOverride()
+		return nil
+	case channelmonitor.FieldGroupID:
+		m.ClearGroupID()
+		return nil
+	case channelmonitor.FieldPublicNote:
+		m.ClearPublicNote()
+		return nil
+	case channelmonitor.FieldReportURL:
+		m.ClearReportURL()
+		return nil
+	case channelmonitor.FieldExpectedInputTokens:
+		m.ClearExpectedInputTokens()
 		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitor nullable field %s", name)
@@ -16195,6 +16594,21 @@ func (m *ChannelMonitorMutation) ResetField(name string) error {
 		return nil
 	case channelmonitor.FieldBodyOverride:
 		m.ResetBodyOverride()
+		return nil
+	case channelmonitor.FieldGroupID:
+		m.ResetGroupID()
+		return nil
+	case channelmonitor.FieldPublicVisible:
+		m.ResetPublicVisible()
+		return nil
+	case channelmonitor.FieldPublicNote:
+		m.ResetPublicNote()
+		return nil
+	case channelmonitor.FieldReportURL:
+		m.ResetReportURL()
+		return nil
+	case channelmonitor.FieldExpectedInputTokens:
+		m.ResetExpectedInputTokens()
 		return nil
 	}
 	return fmt.Errorf("unknown ChannelMonitor field %s", name)

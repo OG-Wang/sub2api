@@ -53,6 +53,16 @@ const (
 	FieldBodyOverrideMode = "body_override_mode"
 	// FieldBodyOverride holds the string denoting the body_override field in the database.
 	FieldBodyOverride = "body_override"
+	// FieldGroupID holds the string denoting the group_id field in the database.
+	FieldGroupID = "group_id"
+	// FieldPublicVisible holds the string denoting the public_visible field in the database.
+	FieldPublicVisible = "public_visible"
+	// FieldPublicNote holds the string denoting the public_note field in the database.
+	FieldPublicNote = "public_note"
+	// FieldReportURL holds the string denoting the report_url field in the database.
+	FieldReportURL = "report_url"
+	// FieldExpectedInputTokens holds the string denoting the expected_input_tokens field in the database.
+	FieldExpectedInputTokens = "expected_input_tokens"
 	// EdgeHistory holds the string denoting the history edge name in mutations.
 	EdgeHistory = "history"
 	// EdgeDailyRollups holds the string denoting the daily_rollups edge name in mutations.
@@ -106,6 +116,11 @@ var Columns = []string{
 	FieldExtraHeaders,
 	FieldBodyOverrideMode,
 	FieldBodyOverride,
+	FieldGroupID,
+	FieldPublicVisible,
+	FieldPublicNote,
+	FieldReportURL,
+	FieldExpectedInputTokens,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -157,6 +172,16 @@ var (
 	DefaultBodyOverrideMode string
 	// BodyOverrideModeValidator is a validator for the "body_override_mode" field. It is called by the builders before save.
 	BodyOverrideModeValidator func(string) error
+	// DefaultPublicVisible holds the default value on creation for the "public_visible" field.
+	DefaultPublicVisible bool
+	// DefaultPublicNote holds the default value on creation for the "public_note" field.
+	DefaultPublicNote string
+	// PublicNoteValidator is a validator for the "public_note" field. It is called by the builders before save.
+	PublicNoteValidator func(string) error
+	// DefaultReportURL holds the default value on creation for the "report_url" field.
+	DefaultReportURL string
+	// ReportURLValidator is a validator for the "report_url" field. It is called by the builders before save.
+	ReportURLValidator func(string) error
 )
 
 // Provider defines the type for the "provider" enum field.
@@ -270,6 +295,31 @@ func ByTemplateID(opts ...sql.OrderTermOption) OrderOption {
 // ByBodyOverrideMode orders the results by the body_override_mode field.
 func ByBodyOverrideMode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBodyOverrideMode, opts...).ToFunc()
+}
+
+// ByGroupID orders the results by the group_id field.
+func ByGroupID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGroupID, opts...).ToFunc()
+}
+
+// ByPublicVisible orders the results by the public_visible field.
+func ByPublicVisible(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublicVisible, opts...).ToFunc()
+}
+
+// ByPublicNote orders the results by the public_note field.
+func ByPublicNote(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublicNote, opts...).ToFunc()
+}
+
+// ByReportURL orders the results by the report_url field.
+func ByReportURL(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReportURL, opts...).ToFunc()
+}
+
+// ByExpectedInputTokens orders the results by the expected_input_tokens field.
+func ByExpectedInputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldExpectedInputTokens, opts...).ToFunc()
 }
 
 // ByHistoryCount orders the results by history count.

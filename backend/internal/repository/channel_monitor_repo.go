@@ -51,7 +51,16 @@ func (r *channelMonitorRepository) Create(ctx context.Context, m *service.Channe
 		SetJitterSeconds(m.JitterSeconds).
 		SetCreatedBy(m.CreatedBy).
 		SetExtraHeaders(channelMonitorHeadersForPersistence(m)).
-		SetBodyOverrideMode(defaultBodyModeRepo(m.BodyOverrideMode))
+		SetBodyOverrideMode(defaultBodyModeRepo(m.BodyOverrideMode)).
+		SetPublicVisible(m.PublicVisible).
+		SetPublicNote(m.PublicNote).
+		SetReportURL(m.ReportURL)
+	if m.GroupID != nil {
+		builder = builder.SetGroupID(*m.GroupID)
+	}
+	if m.ExpectedInputTokens != nil {
+		builder = builder.SetExpectedInputTokens(*m.ExpectedInputTokens)
+	}
 	if m.TemplateID != nil {
 		builder = builder.SetTemplateID(*m.TemplateID)
 	}
@@ -118,7 +127,20 @@ func (r *channelMonitorRepository) Update(ctx context.Context, m *service.Channe
 		SetIntervalSeconds(m.IntervalSeconds).
 		SetJitterSeconds(m.JitterSeconds).
 		SetExtraHeaders(channelMonitorHeadersForPersistence(m)).
-		SetBodyOverrideMode(defaultBodyModeRepo(m.BodyOverrideMode))
+		SetBodyOverrideMode(defaultBodyModeRepo(m.BodyOverrideMode)).
+		SetPublicVisible(m.PublicVisible).
+		SetPublicNote(m.PublicNote).
+		SetReportURL(m.ReportURL)
+	if m.GroupID != nil {
+		updater = updater.SetGroupID(*m.GroupID)
+	} else {
+		updater = updater.ClearGroupID()
+	}
+	if m.ExpectedInputTokens != nil {
+		updater = updater.SetExpectedInputTokens(*m.ExpectedInputTokens)
+	} else {
+		updater = updater.ClearExpectedInputTokens()
+	}
 	if m.TemplateID != nil {
 		updater = updater.SetTemplateID(*m.TemplateID)
 	} else {
@@ -758,6 +780,17 @@ func entToServiceMonitor(row *dbent.ChannelMonitor) *service.ChannelMonitor {
 		BodyOverrideMode:     row.BodyOverrideMode,
 		BodyOverride:         row.BodyOverride,
 		DuplicateOperationID: duplicateOperationID,
+		PublicVisible:        row.PublicVisible,
+		PublicNote:           row.PublicNote,
+		ReportURL:            row.ReportURL,
+	}
+	if row.GroupID != nil {
+		id := *row.GroupID
+		out.GroupID = &id
+	}
+	if row.ExpectedInputTokens != nil {
+		tokens := *row.ExpectedInputTokens
+		out.ExpectedInputTokens = &tokens
 	}
 	if row.TemplateID != nil {
 		id := *row.TemplateID

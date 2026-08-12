@@ -211,6 +211,76 @@ func (_c *ChannelMonitorCreate) SetBodyOverride(v map[string]interface{}) *Chann
 	return _c
 }
 
+// SetGroupID sets the "group_id" field.
+func (_c *ChannelMonitorCreate) SetGroupID(v int64) *ChannelMonitorCreate {
+	_c.mutation.SetGroupID(v)
+	return _c
+}
+
+// SetNillableGroupID sets the "group_id" field if the given value is not nil.
+func (_c *ChannelMonitorCreate) SetNillableGroupID(v *int64) *ChannelMonitorCreate {
+	if v != nil {
+		_c.SetGroupID(*v)
+	}
+	return _c
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (_c *ChannelMonitorCreate) SetPublicVisible(v bool) *ChannelMonitorCreate {
+	_c.mutation.SetPublicVisible(v)
+	return _c
+}
+
+// SetNillablePublicVisible sets the "public_visible" field if the given value is not nil.
+func (_c *ChannelMonitorCreate) SetNillablePublicVisible(v *bool) *ChannelMonitorCreate {
+	if v != nil {
+		_c.SetPublicVisible(*v)
+	}
+	return _c
+}
+
+// SetPublicNote sets the "public_note" field.
+func (_c *ChannelMonitorCreate) SetPublicNote(v string) *ChannelMonitorCreate {
+	_c.mutation.SetPublicNote(v)
+	return _c
+}
+
+// SetNillablePublicNote sets the "public_note" field if the given value is not nil.
+func (_c *ChannelMonitorCreate) SetNillablePublicNote(v *string) *ChannelMonitorCreate {
+	if v != nil {
+		_c.SetPublicNote(*v)
+	}
+	return _c
+}
+
+// SetReportURL sets the "report_url" field.
+func (_c *ChannelMonitorCreate) SetReportURL(v string) *ChannelMonitorCreate {
+	_c.mutation.SetReportURL(v)
+	return _c
+}
+
+// SetNillableReportURL sets the "report_url" field if the given value is not nil.
+func (_c *ChannelMonitorCreate) SetNillableReportURL(v *string) *ChannelMonitorCreate {
+	if v != nil {
+		_c.SetReportURL(*v)
+	}
+	return _c
+}
+
+// SetExpectedInputTokens sets the "expected_input_tokens" field.
+func (_c *ChannelMonitorCreate) SetExpectedInputTokens(v int) *ChannelMonitorCreate {
+	_c.mutation.SetExpectedInputTokens(v)
+	return _c
+}
+
+// SetNillableExpectedInputTokens sets the "expected_input_tokens" field if the given value is not nil.
+func (_c *ChannelMonitorCreate) SetNillableExpectedInputTokens(v *int) *ChannelMonitorCreate {
+	if v != nil {
+		_c.SetExpectedInputTokens(*v)
+	}
+	return _c
+}
+
 // AddHistoryIDs adds the "history" edge to the ChannelMonitorHistory entity by IDs.
 func (_c *ChannelMonitorCreate) AddHistoryIDs(ids ...int64) *ChannelMonitorCreate {
 	_c.mutation.AddHistoryIDs(ids...)
@@ -331,6 +401,18 @@ func (_c *ChannelMonitorCreate) defaults() {
 		v := channelmonitor.DefaultBodyOverrideMode
 		_c.mutation.SetBodyOverrideMode(v)
 	}
+	if _, ok := _c.mutation.PublicVisible(); !ok {
+		v := channelmonitor.DefaultPublicVisible
+		_c.mutation.SetPublicVisible(v)
+	}
+	if _, ok := _c.mutation.PublicNote(); !ok {
+		v := channelmonitor.DefaultPublicNote
+		_c.mutation.SetPublicNote(v)
+	}
+	if _, ok := _c.mutation.ReportURL(); !ok {
+		v := channelmonitor.DefaultReportURL
+		_c.mutation.SetReportURL(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -428,6 +510,19 @@ func (_c *ChannelMonitorCreate) check() error {
 	if v, ok := _c.mutation.BodyOverrideMode(); ok {
 		if err := channelmonitor.BodyOverrideModeValidator(v); err != nil {
 			return &ValidationError{Name: "body_override_mode", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.body_override_mode": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.PublicVisible(); !ok {
+		return &ValidationError{Name: "public_visible", err: errors.New(`ent: missing required field "ChannelMonitor.public_visible"`)}
+	}
+	if v, ok := _c.mutation.PublicNote(); ok {
+		if err := channelmonitor.PublicNoteValidator(v); err != nil {
+			return &ValidationError{Name: "public_note", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.public_note": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.ReportURL(); ok {
+		if err := channelmonitor.ReportURLValidator(v); err != nil {
+			return &ValidationError{Name: "report_url", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.report_url": %w`, err)}
 		}
 	}
 	return nil
@@ -528,6 +623,26 @@ func (_c *ChannelMonitorCreate) createSpec() (*ChannelMonitor, *sqlgraph.CreateS
 	if value, ok := _c.mutation.BodyOverride(); ok {
 		_spec.SetField(channelmonitor.FieldBodyOverride, field.TypeJSON, value)
 		_node.BodyOverride = value
+	}
+	if value, ok := _c.mutation.GroupID(); ok {
+		_spec.SetField(channelmonitor.FieldGroupID, field.TypeInt64, value)
+		_node.GroupID = &value
+	}
+	if value, ok := _c.mutation.PublicVisible(); ok {
+		_spec.SetField(channelmonitor.FieldPublicVisible, field.TypeBool, value)
+		_node.PublicVisible = value
+	}
+	if value, ok := _c.mutation.PublicNote(); ok {
+		_spec.SetField(channelmonitor.FieldPublicNote, field.TypeString, value)
+		_node.PublicNote = value
+	}
+	if value, ok := _c.mutation.ReportURL(); ok {
+		_spec.SetField(channelmonitor.FieldReportURL, field.TypeString, value)
+		_node.ReportURL = value
+	}
+	if value, ok := _c.mutation.ExpectedInputTokens(); ok {
+		_spec.SetField(channelmonitor.FieldExpectedInputTokens, field.TypeInt, value)
+		_node.ExpectedInputTokens = &value
 	}
 	if nodes := _c.mutation.HistoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -888,6 +1003,102 @@ func (u *ChannelMonitorUpsert) ClearBodyOverride() *ChannelMonitorUpsert {
 	return u
 }
 
+// SetGroupID sets the "group_id" field.
+func (u *ChannelMonitorUpsert) SetGroupID(v int64) *ChannelMonitorUpsert {
+	u.Set(channelmonitor.FieldGroupID, v)
+	return u
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *ChannelMonitorUpsert) UpdateGroupID() *ChannelMonitorUpsert {
+	u.SetExcluded(channelmonitor.FieldGroupID)
+	return u
+}
+
+// AddGroupID adds v to the "group_id" field.
+func (u *ChannelMonitorUpsert) AddGroupID(v int64) *ChannelMonitorUpsert {
+	u.Add(channelmonitor.FieldGroupID, v)
+	return u
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (u *ChannelMonitorUpsert) ClearGroupID() *ChannelMonitorUpsert {
+	u.SetNull(channelmonitor.FieldGroupID)
+	return u
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (u *ChannelMonitorUpsert) SetPublicVisible(v bool) *ChannelMonitorUpsert {
+	u.Set(channelmonitor.FieldPublicVisible, v)
+	return u
+}
+
+// UpdatePublicVisible sets the "public_visible" field to the value that was provided on create.
+func (u *ChannelMonitorUpsert) UpdatePublicVisible() *ChannelMonitorUpsert {
+	u.SetExcluded(channelmonitor.FieldPublicVisible)
+	return u
+}
+
+// SetPublicNote sets the "public_note" field.
+func (u *ChannelMonitorUpsert) SetPublicNote(v string) *ChannelMonitorUpsert {
+	u.Set(channelmonitor.FieldPublicNote, v)
+	return u
+}
+
+// UpdatePublicNote sets the "public_note" field to the value that was provided on create.
+func (u *ChannelMonitorUpsert) UpdatePublicNote() *ChannelMonitorUpsert {
+	u.SetExcluded(channelmonitor.FieldPublicNote)
+	return u
+}
+
+// ClearPublicNote clears the value of the "public_note" field.
+func (u *ChannelMonitorUpsert) ClearPublicNote() *ChannelMonitorUpsert {
+	u.SetNull(channelmonitor.FieldPublicNote)
+	return u
+}
+
+// SetReportURL sets the "report_url" field.
+func (u *ChannelMonitorUpsert) SetReportURL(v string) *ChannelMonitorUpsert {
+	u.Set(channelmonitor.FieldReportURL, v)
+	return u
+}
+
+// UpdateReportURL sets the "report_url" field to the value that was provided on create.
+func (u *ChannelMonitorUpsert) UpdateReportURL() *ChannelMonitorUpsert {
+	u.SetExcluded(channelmonitor.FieldReportURL)
+	return u
+}
+
+// ClearReportURL clears the value of the "report_url" field.
+func (u *ChannelMonitorUpsert) ClearReportURL() *ChannelMonitorUpsert {
+	u.SetNull(channelmonitor.FieldReportURL)
+	return u
+}
+
+// SetExpectedInputTokens sets the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsert) SetExpectedInputTokens(v int) *ChannelMonitorUpsert {
+	u.Set(channelmonitor.FieldExpectedInputTokens, v)
+	return u
+}
+
+// UpdateExpectedInputTokens sets the "expected_input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorUpsert) UpdateExpectedInputTokens() *ChannelMonitorUpsert {
+	u.SetExcluded(channelmonitor.FieldExpectedInputTokens)
+	return u
+}
+
+// AddExpectedInputTokens adds v to the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsert) AddExpectedInputTokens(v int) *ChannelMonitorUpsert {
+	u.Add(channelmonitor.FieldExpectedInputTokens, v)
+	return u
+}
+
+// ClearExpectedInputTokens clears the value of the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsert) ClearExpectedInputTokens() *ChannelMonitorUpsert {
+	u.SetNull(channelmonitor.FieldExpectedInputTokens)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -1231,6 +1442,118 @@ func (u *ChannelMonitorUpsertOne) UpdateBodyOverride() *ChannelMonitorUpsertOne 
 func (u *ChannelMonitorUpsertOne) ClearBodyOverride() *ChannelMonitorUpsertOne {
 	return u.Update(func(s *ChannelMonitorUpsert) {
 		s.ClearBodyOverride()
+	})
+}
+
+// SetGroupID sets the "group_id" field.
+func (u *ChannelMonitorUpsertOne) SetGroupID(v int64) *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetGroupID(v)
+	})
+}
+
+// AddGroupID adds v to the "group_id" field.
+func (u *ChannelMonitorUpsertOne) AddGroupID(v int64) *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.AddGroupID(v)
+	})
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertOne) UpdateGroupID() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdateGroupID()
+	})
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (u *ChannelMonitorUpsertOne) ClearGroupID() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearGroupID()
+	})
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (u *ChannelMonitorUpsertOne) SetPublicVisible(v bool) *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetPublicVisible(v)
+	})
+}
+
+// UpdatePublicVisible sets the "public_visible" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertOne) UpdatePublicVisible() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdatePublicVisible()
+	})
+}
+
+// SetPublicNote sets the "public_note" field.
+func (u *ChannelMonitorUpsertOne) SetPublicNote(v string) *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetPublicNote(v)
+	})
+}
+
+// UpdatePublicNote sets the "public_note" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertOne) UpdatePublicNote() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdatePublicNote()
+	})
+}
+
+// ClearPublicNote clears the value of the "public_note" field.
+func (u *ChannelMonitorUpsertOne) ClearPublicNote() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearPublicNote()
+	})
+}
+
+// SetReportURL sets the "report_url" field.
+func (u *ChannelMonitorUpsertOne) SetReportURL(v string) *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetReportURL(v)
+	})
+}
+
+// UpdateReportURL sets the "report_url" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertOne) UpdateReportURL() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdateReportURL()
+	})
+}
+
+// ClearReportURL clears the value of the "report_url" field.
+func (u *ChannelMonitorUpsertOne) ClearReportURL() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearReportURL()
+	})
+}
+
+// SetExpectedInputTokens sets the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsertOne) SetExpectedInputTokens(v int) *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetExpectedInputTokens(v)
+	})
+}
+
+// AddExpectedInputTokens adds v to the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsertOne) AddExpectedInputTokens(v int) *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.AddExpectedInputTokens(v)
+	})
+}
+
+// UpdateExpectedInputTokens sets the "expected_input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertOne) UpdateExpectedInputTokens() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdateExpectedInputTokens()
+	})
+}
+
+// ClearExpectedInputTokens clears the value of the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsertOne) ClearExpectedInputTokens() *ChannelMonitorUpsertOne {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearExpectedInputTokens()
 	})
 }
 
@@ -1743,6 +2066,118 @@ func (u *ChannelMonitorUpsertBulk) UpdateBodyOverride() *ChannelMonitorUpsertBul
 func (u *ChannelMonitorUpsertBulk) ClearBodyOverride() *ChannelMonitorUpsertBulk {
 	return u.Update(func(s *ChannelMonitorUpsert) {
 		s.ClearBodyOverride()
+	})
+}
+
+// SetGroupID sets the "group_id" field.
+func (u *ChannelMonitorUpsertBulk) SetGroupID(v int64) *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetGroupID(v)
+	})
+}
+
+// AddGroupID adds v to the "group_id" field.
+func (u *ChannelMonitorUpsertBulk) AddGroupID(v int64) *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.AddGroupID(v)
+	})
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertBulk) UpdateGroupID() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdateGroupID()
+	})
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (u *ChannelMonitorUpsertBulk) ClearGroupID() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearGroupID()
+	})
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (u *ChannelMonitorUpsertBulk) SetPublicVisible(v bool) *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetPublicVisible(v)
+	})
+}
+
+// UpdatePublicVisible sets the "public_visible" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertBulk) UpdatePublicVisible() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdatePublicVisible()
+	})
+}
+
+// SetPublicNote sets the "public_note" field.
+func (u *ChannelMonitorUpsertBulk) SetPublicNote(v string) *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetPublicNote(v)
+	})
+}
+
+// UpdatePublicNote sets the "public_note" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertBulk) UpdatePublicNote() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdatePublicNote()
+	})
+}
+
+// ClearPublicNote clears the value of the "public_note" field.
+func (u *ChannelMonitorUpsertBulk) ClearPublicNote() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearPublicNote()
+	})
+}
+
+// SetReportURL sets the "report_url" field.
+func (u *ChannelMonitorUpsertBulk) SetReportURL(v string) *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetReportURL(v)
+	})
+}
+
+// UpdateReportURL sets the "report_url" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertBulk) UpdateReportURL() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdateReportURL()
+	})
+}
+
+// ClearReportURL clears the value of the "report_url" field.
+func (u *ChannelMonitorUpsertBulk) ClearReportURL() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearReportURL()
+	})
+}
+
+// SetExpectedInputTokens sets the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsertBulk) SetExpectedInputTokens(v int) *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.SetExpectedInputTokens(v)
+	})
+}
+
+// AddExpectedInputTokens adds v to the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsertBulk) AddExpectedInputTokens(v int) *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.AddExpectedInputTokens(v)
+	})
+}
+
+// UpdateExpectedInputTokens sets the "expected_input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorUpsertBulk) UpdateExpectedInputTokens() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.UpdateExpectedInputTokens()
+	})
+}
+
+// ClearExpectedInputTokens clears the value of the "expected_input_tokens" field.
+func (u *ChannelMonitorUpsertBulk) ClearExpectedInputTokens() *ChannelMonitorUpsertBulk {
+	return u.Update(func(s *ChannelMonitorUpsert) {
+		s.ClearExpectedInputTokens()
 	})
 }
 
