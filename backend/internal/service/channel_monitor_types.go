@@ -173,6 +173,13 @@ type CheckResult struct {
 	CheckedAt     time.Time
 	// Quota 配额模式附带快照（quota 模式唯一数据；quota_probe 挂在主模型行）。
 	Quota *domain.MonitorQuotaSnapshot
+
+	// ---- 探测指标（供应商大厅）----
+	// TTFTMs 仅流式探测能测到；InputTokens / OutputTokens 取自上游报告的 usage。
+	// 三者都可能为 nil：上游没报、检测失败、或还没改成流式。
+	TTFTMs       *int
+	InputTokens  *int
+	OutputTokens *int
 }
 
 // UserMonitorView 用户只读视图：监控概览（含主模型最近状态 + 7d 可用率 + 附加模型最近状态）。
@@ -238,6 +245,9 @@ type ChannelMonitorHistoryRow struct {
 	Message       string
 	CheckedAt     time.Time
 	Quota         *domain.MonitorQuotaSnapshot
+	TTFTMs        *int
+	InputTokens   *int
+	OutputTokens  *int
 }
 
 // ChannelMonitorHistoryEntry 历史记录查询返回行（含 ent 主键 ID）。
@@ -250,6 +260,9 @@ type ChannelMonitorHistoryEntry struct {
 	Message       string
 	CheckedAt     time.Time
 	Quota         *domain.MonitorQuotaSnapshot
+	TTFTMs        *int
+	InputTokens   *int
+	OutputTokens  *int
 }
 
 // ChannelMonitorLatest 最近一次检测的简明信息（用于 UserMonitorView 聚合）。
@@ -260,6 +273,9 @@ type ChannelMonitorLatest struct {
 	PingLatencyMs *int
 	CheckedAt     time.Time
 	Quota         *domain.MonitorQuotaSnapshot
+	TTFTMs        *int
+	InputTokens   *int
+	OutputTokens  *int
 }
 
 // ChannelMonitorAvailability 单个模型在某窗口内的可用率与平均延迟（用于 UserMonitorDetail 聚合）。
