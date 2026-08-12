@@ -707,6 +707,22 @@ func init() {
 	channelmonitor.DefaultBodyOverrideMode = channelmonitorDescBodyOverrideMode.Default.(string)
 	// channelmonitor.BodyOverrideModeValidator is a validator for the "body_override_mode" field. It is called by the builders before save.
 	channelmonitor.BodyOverrideModeValidator = channelmonitorDescBodyOverrideMode.Validators[0].(func(string) error)
+	// channelmonitorDescPublicVisible is the schema descriptor for public_visible field.
+	channelmonitorDescPublicVisible := channelmonitorFields[20].Descriptor()
+	// channelmonitor.DefaultPublicVisible holds the default value on creation for the public_visible field.
+	channelmonitor.DefaultPublicVisible = channelmonitorDescPublicVisible.Default.(bool)
+	// channelmonitorDescPublicNote is the schema descriptor for public_note field.
+	channelmonitorDescPublicNote := channelmonitorFields[21].Descriptor()
+	// channelmonitor.DefaultPublicNote holds the default value on creation for the public_note field.
+	channelmonitor.DefaultPublicNote = channelmonitorDescPublicNote.Default.(string)
+	// channelmonitor.PublicNoteValidator is a validator for the "public_note" field. It is called by the builders before save.
+	channelmonitor.PublicNoteValidator = channelmonitorDescPublicNote.Validators[0].(func(string) error)
+	// channelmonitorDescReportURL is the schema descriptor for report_url field.
+	channelmonitorDescReportURL := channelmonitorFields[22].Descriptor()
+	// channelmonitor.DefaultReportURL holds the default value on creation for the report_url field.
+	channelmonitor.DefaultReportURL = channelmonitorDescReportURL.Default.(string)
+	// channelmonitor.ReportURLValidator is a validator for the "report_url" field. It is called by the builders before save.
+	channelmonitor.ReportURLValidator = channelmonitorDescReportURL.Validators[0].(func(string) error)
 	channelmonitordailyrollupFields := schema.ChannelMonitorDailyRollup{}.Fields()
 	_ = channelmonitordailyrollupFields
 	// channelmonitordailyrollupDescModel is the schema descriptor for model field.
