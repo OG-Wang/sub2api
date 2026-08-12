@@ -757,6 +757,9 @@ var (
 		{Name: "message", Type: field.TypeString, Nullable: true, Size: 500, Default: ""},
 		{Name: "quota", Type: field.TypeJSON, Nullable: true},
 		{Name: "checked_at", Type: field.TypeTime},
+		{Name: "ttft_ms", Type: field.TypeInt, Nullable: true},
+		{Name: "input_tokens", Type: field.TypeInt, Nullable: true},
+		{Name: "output_tokens", Type: field.TypeInt, Nullable: true},
 		{Name: "monitor_id", Type: field.TypeInt64},
 	}
 	// ChannelMonitorHistoriesTable holds the schema information for the "channel_monitor_histories" table.
@@ -767,7 +770,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "channel_monitor_histories_channel_monitors_history",
-				Columns:    []*schema.Column{ChannelMonitorHistoriesColumns[8]},
+				Columns:    []*schema.Column{ChannelMonitorHistoriesColumns[11]},
 				RefColumns: []*schema.Column{ChannelMonitorsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
@@ -776,7 +779,7 @@ var (
 			{
 				Name:    "channelmonitorhistory_monitor_id_model_checked_at",
 				Unique:  false,
-				Columns: []*schema.Column{ChannelMonitorHistoriesColumns[8], ChannelMonitorHistoriesColumns[1], ChannelMonitorHistoriesColumns[7]},
+				Columns: []*schema.Column{ChannelMonitorHistoriesColumns[11], ChannelMonitorHistoriesColumns[1], ChannelMonitorHistoriesColumns[7]},
 			},
 			{
 				Name:    "channelmonitorhistory_checked_at",
