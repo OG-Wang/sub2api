@@ -69,6 +69,20 @@ type ChannelMonitor struct {
 	// APIKeyDecryptFailed 表示 APIKey 字段无法解密（密钥不一致或损坏）。
 	// 此时 APIKey 为空字符串，runner / RunCheck 必须跳过该监控并提示重填。
 	APIKeyDecryptFailed bool
+
+	// ---- 供应商大厅字段 ----
+
+	// GroupID 关联的真实分组 ID。为 nil 时展示层回退到 GroupName 字符串
+	// （无倍率、「使用此分组」按钮置灰）。
+	GroupID *int64
+	// PublicVisible 是否在用户端供应商大厅展示，默认 false。
+	PublicVisible bool
+	// PublicNote 分组备注，展示在大厅的分组名下方。
+	PublicNote string
+	// ReportURL 可选的外部检测报告链接，为空时不渲染。
+	ReportURL string
+	// ExpectedInputTokens 探测输入 token 基线，为 nil 时走自动学习。
+	ExpectedInputTokens *int
 }
 
 // ChannelMonitorListParams 列表查询过滤参数。
@@ -102,6 +116,12 @@ type ChannelMonitorCreateParams struct {
 	// 配额模式：CheckMode 空串默认 probe；quota/quota_probe 必须关联账号。
 	CheckMode string
 	AccountID *int64
+
+	GroupID             *int64
+	PublicVisible       bool
+	PublicNote          string
+	ReportURL           string
+	ExpectedInputTokens *int
 }
 
 // ChannelMonitorUpdateParams 更新参数（指针字段表示"未提供则不更新"）。
@@ -130,6 +150,17 @@ type ChannelMonitorUpdateParams struct {
 	// 指向 0 = 清空关联（退回 probe 模式时由 CheckMode 分支兜底）。
 	CheckMode *string
 	AccountID *int64
+
+	// 供应商大厅字段：指针为 nil 表示不更新。
+	// GroupID / ExpectedInputTokens 用显式 Clear 标志表达「置空」，
+	// 避免 **int64 这种难读的三态写法（与上面 ClearTemplate 同一套路）。
+	GroupID                  *int64
+	ClearGroupID             bool
+	PublicVisible            *bool
+	PublicNote               *string
+	ReportURL                *string
+	ExpectedInputTokens      *int
+	ClearExpectedInputTokens bool
 }
 
 // CheckResult 单个模型一次检测的结果。

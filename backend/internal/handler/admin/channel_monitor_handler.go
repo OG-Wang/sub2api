@@ -60,6 +60,12 @@ type channelMonitorCreateRequest struct {
 	CheckMode string `json:"check_mode" binding:"omitempty,oneof=probe quota quota_probe"`
 	// AccountID: 配额模式关联的账号 ID。
 	AccountID *int64 `json:"account_id"`
+	// 供应商大厅字段
+	GroupID             *int64 `json:"group_id"`
+	PublicVisible       *bool  `json:"public_visible"`
+	PublicNote          string `json:"public_note" binding:"max=200"`
+	ReportURL           string `json:"report_url" binding:"max=500"`
+	ExpectedInputTokens *int   `json:"expected_input_tokens"`
 }
 
 type channelMonitorUpdateRequest struct {
@@ -83,6 +89,15 @@ type channelMonitorUpdateRequest struct {
 	// CheckMode/AccountID：nil = 不更新；AccountID 指向 0 = 清空关联。
 	CheckMode *string `json:"check_mode" binding:"omitempty,oneof=probe quota quota_probe"`
 	AccountID *int64  `json:"account_id"`
+	// 供应商大厅字段。GroupID / ExpectedInputTokens 用显式 clear 标志表达置空，
+	// 与上面 ClearTemplate 保持同一套路。
+	GroupID                  *int64  `json:"group_id"`
+	ClearGroupID             bool    `json:"clear_group_id"`
+	PublicVisible            *bool   `json:"public_visible"`
+	PublicNote               *string `json:"public_note" binding:"omitempty,max=200"`
+	ReportURL                *string `json:"report_url" binding:"omitempty,max=500"`
+	ExpectedInputTokens      *int    `json:"expected_input_tokens"`
+	ClearExpectedInputTokens bool    `json:"clear_expected_input_tokens"`
 }
 
 type channelMonitorResponse struct {
@@ -118,6 +133,12 @@ type channelMonitorResponse struct {
 	CheckMode   string                       `json:"check_mode"`
 	AccountID   *int64                       `json:"account_id"`
 	LatestQuota *domain.MonitorQuotaSnapshot `json:"latest_quota,omitempty"`
+	// 供应商大厅字段
+	GroupID             *int64 `json:"group_id"`
+	PublicVisible       bool   `json:"public_visible"`
+	PublicNote          string `json:"public_note"`
+	ReportURL           string `json:"report_url"`
+	ExpectedInputTokens *int   `json:"expected_input_tokens"`
 }
 
 type channelMonitorCheckResultResponse struct {
@@ -184,6 +205,11 @@ func channelMonitorToResponse(m *service.ChannelMonitor) *channelMonitorResponse
 		BodyOverride:        m.BodyOverride,
 		CheckMode:           m.CheckMode,
 		AccountID:           m.AccountID,
+		GroupID:             m.GroupID,
+		PublicVisible:       m.PublicVisible,
+		PublicNote:          m.PublicNote,
+		ReportURL:           m.ReportURL,
+		ExpectedInputTokens: m.ExpectedInputTokens,
 		// PrimaryStatus / PrimaryLatencyMs / Availability7d / LatestQuota
 		// 由 List handler 在批量聚合后填充。
 	}
@@ -354,6 +380,12 @@ func (h *ChannelMonitorHandler) Create(c *gin.Context) {
 		BodyOverride:     req.BodyOverride,
 		CheckMode:        req.CheckMode,
 		AccountID:        req.AccountID,
+
+		GroupID:             req.GroupID,
+		PublicVisible:       req.PublicVisible != nil && *req.PublicVisible,
+		PublicNote:          req.PublicNote,
+		ReportURL:           req.ReportURL,
+		ExpectedInputTokens: req.ExpectedInputTokens,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)
@@ -450,6 +482,14 @@ func (h *ChannelMonitorHandler) Update(c *gin.Context) {
 		BodyOverride:     req.BodyOverride,
 		CheckMode:        req.CheckMode,
 		AccountID:        req.AccountID,
+
+		GroupID:                  req.GroupID,
+		ClearGroupID:             req.ClearGroupID,
+		PublicVisible:            req.PublicVisible,
+		PublicNote:               req.PublicNote,
+		ReportURL:                req.ReportURL,
+		ExpectedInputTokens:      req.ExpectedInputTokens,
+		ClearExpectedInputTokens: req.ClearExpectedInputTokens,
 	})
 	if err != nil {
 		response.ErrorFrom(c, err)

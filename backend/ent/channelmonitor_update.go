@@ -344,6 +344,114 @@ func (_u *ChannelMonitorUpdate) ClearBodyOverride() *ChannelMonitorUpdate {
 	return _u
 }
 
+// SetGroupID sets the "group_id" field.
+func (_u *ChannelMonitorUpdate) SetGroupID(v int64) *ChannelMonitorUpdate {
+	_u.mutation.ResetGroupID()
+	_u.mutation.SetGroupID(v)
+	return _u
+}
+
+// SetNillableGroupID sets the "group_id" field if the given value is not nil.
+func (_u *ChannelMonitorUpdate) SetNillableGroupID(v *int64) *ChannelMonitorUpdate {
+	if v != nil {
+		_u.SetGroupID(*v)
+	}
+	return _u
+}
+
+// AddGroupID adds value to the "group_id" field.
+func (_u *ChannelMonitorUpdate) AddGroupID(v int64) *ChannelMonitorUpdate {
+	_u.mutation.AddGroupID(v)
+	return _u
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (_u *ChannelMonitorUpdate) ClearGroupID() *ChannelMonitorUpdate {
+	_u.mutation.ClearGroupID()
+	return _u
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (_u *ChannelMonitorUpdate) SetPublicVisible(v bool) *ChannelMonitorUpdate {
+	_u.mutation.SetPublicVisible(v)
+	return _u
+}
+
+// SetNillablePublicVisible sets the "public_visible" field if the given value is not nil.
+func (_u *ChannelMonitorUpdate) SetNillablePublicVisible(v *bool) *ChannelMonitorUpdate {
+	if v != nil {
+		_u.SetPublicVisible(*v)
+	}
+	return _u
+}
+
+// SetPublicNote sets the "public_note" field.
+func (_u *ChannelMonitorUpdate) SetPublicNote(v string) *ChannelMonitorUpdate {
+	_u.mutation.SetPublicNote(v)
+	return _u
+}
+
+// SetNillablePublicNote sets the "public_note" field if the given value is not nil.
+func (_u *ChannelMonitorUpdate) SetNillablePublicNote(v *string) *ChannelMonitorUpdate {
+	if v != nil {
+		_u.SetPublicNote(*v)
+	}
+	return _u
+}
+
+// ClearPublicNote clears the value of the "public_note" field.
+func (_u *ChannelMonitorUpdate) ClearPublicNote() *ChannelMonitorUpdate {
+	_u.mutation.ClearPublicNote()
+	return _u
+}
+
+// SetReportURL sets the "report_url" field.
+func (_u *ChannelMonitorUpdate) SetReportURL(v string) *ChannelMonitorUpdate {
+	_u.mutation.SetReportURL(v)
+	return _u
+}
+
+// SetNillableReportURL sets the "report_url" field if the given value is not nil.
+func (_u *ChannelMonitorUpdate) SetNillableReportURL(v *string) *ChannelMonitorUpdate {
+	if v != nil {
+		_u.SetReportURL(*v)
+	}
+	return _u
+}
+
+// ClearReportURL clears the value of the "report_url" field.
+func (_u *ChannelMonitorUpdate) ClearReportURL() *ChannelMonitorUpdate {
+	_u.mutation.ClearReportURL()
+	return _u
+}
+
+// SetExpectedInputTokens sets the "expected_input_tokens" field.
+func (_u *ChannelMonitorUpdate) SetExpectedInputTokens(v int) *ChannelMonitorUpdate {
+	_u.mutation.ResetExpectedInputTokens()
+	_u.mutation.SetExpectedInputTokens(v)
+	return _u
+}
+
+// SetNillableExpectedInputTokens sets the "expected_input_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorUpdate) SetNillableExpectedInputTokens(v *int) *ChannelMonitorUpdate {
+	if v != nil {
+		_u.SetExpectedInputTokens(*v)
+	}
+	return _u
+}
+
+// AddExpectedInputTokens adds value to the "expected_input_tokens" field.
+func (_u *ChannelMonitorUpdate) AddExpectedInputTokens(v int) *ChannelMonitorUpdate {
+	_u.mutation.AddExpectedInputTokens(v)
+	return _u
+}
+
+// ClearExpectedInputTokens clears the value of the "expected_input_tokens" field.
+func (_u *ChannelMonitorUpdate) ClearExpectedInputTokens() *ChannelMonitorUpdate {
+	_u.mutation.ClearExpectedInputTokens()
+	return _u
+}
+
 // AddHistoryIDs adds the "history" edge to the ChannelMonitorHistory entity by IDs.
 func (_u *ChannelMonitorUpdate) AddHistoryIDs(ids ...int64) *ChannelMonitorUpdate {
 	_u.mutation.AddHistoryIDs(ids...)
@@ -539,6 +647,16 @@ func (_u *ChannelMonitorUpdate) check() error {
 			return &ValidationError{Name: "body_override_mode", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.body_override_mode": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.PublicNote(); ok {
+		if err := channelmonitor.PublicNoteValidator(v); err != nil {
+			return &ValidationError{Name: "public_note", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.public_note": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ReportURL(); ok {
+		if err := channelmonitor.ReportURLValidator(v); err != nil {
+			return &ValidationError{Name: "report_url", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.report_url": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -639,6 +757,39 @@ func (_u *ChannelMonitorUpdate) sqlSave(ctx context.Context) (_node int, err err
 	}
 	if _u.mutation.BodyOverrideCleared() {
 		_spec.ClearField(channelmonitor.FieldBodyOverride, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.GroupID(); ok {
+		_spec.SetField(channelmonitor.FieldGroupID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedGroupID(); ok {
+		_spec.AddField(channelmonitor.FieldGroupID, field.TypeInt64, value)
+	}
+	if _u.mutation.GroupIDCleared() {
+		_spec.ClearField(channelmonitor.FieldGroupID, field.TypeInt64)
+	}
+	if value, ok := _u.mutation.PublicVisible(); ok {
+		_spec.SetField(channelmonitor.FieldPublicVisible, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.PublicNote(); ok {
+		_spec.SetField(channelmonitor.FieldPublicNote, field.TypeString, value)
+	}
+	if _u.mutation.PublicNoteCleared() {
+		_spec.ClearField(channelmonitor.FieldPublicNote, field.TypeString)
+	}
+	if value, ok := _u.mutation.ReportURL(); ok {
+		_spec.SetField(channelmonitor.FieldReportURL, field.TypeString, value)
+	}
+	if _u.mutation.ReportURLCleared() {
+		_spec.ClearField(channelmonitor.FieldReportURL, field.TypeString)
+	}
+	if value, ok := _u.mutation.ExpectedInputTokens(); ok {
+		_spec.SetField(channelmonitor.FieldExpectedInputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedExpectedInputTokens(); ok {
+		_spec.AddField(channelmonitor.FieldExpectedInputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.ExpectedInputTokensCleared() {
+		_spec.ClearField(channelmonitor.FieldExpectedInputTokens, field.TypeInt)
 	}
 	if _u.mutation.HistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1091,6 +1242,114 @@ func (_u *ChannelMonitorUpdateOne) ClearBodyOverride() *ChannelMonitorUpdateOne 
 	return _u
 }
 
+// SetGroupID sets the "group_id" field.
+func (_u *ChannelMonitorUpdateOne) SetGroupID(v int64) *ChannelMonitorUpdateOne {
+	_u.mutation.ResetGroupID()
+	_u.mutation.SetGroupID(v)
+	return _u
+}
+
+// SetNillableGroupID sets the "group_id" field if the given value is not nil.
+func (_u *ChannelMonitorUpdateOne) SetNillableGroupID(v *int64) *ChannelMonitorUpdateOne {
+	if v != nil {
+		_u.SetGroupID(*v)
+	}
+	return _u
+}
+
+// AddGroupID adds value to the "group_id" field.
+func (_u *ChannelMonitorUpdateOne) AddGroupID(v int64) *ChannelMonitorUpdateOne {
+	_u.mutation.AddGroupID(v)
+	return _u
+}
+
+// ClearGroupID clears the value of the "group_id" field.
+func (_u *ChannelMonitorUpdateOne) ClearGroupID() *ChannelMonitorUpdateOne {
+	_u.mutation.ClearGroupID()
+	return _u
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (_u *ChannelMonitorUpdateOne) SetPublicVisible(v bool) *ChannelMonitorUpdateOne {
+	_u.mutation.SetPublicVisible(v)
+	return _u
+}
+
+// SetNillablePublicVisible sets the "public_visible" field if the given value is not nil.
+func (_u *ChannelMonitorUpdateOne) SetNillablePublicVisible(v *bool) *ChannelMonitorUpdateOne {
+	if v != nil {
+		_u.SetPublicVisible(*v)
+	}
+	return _u
+}
+
+// SetPublicNote sets the "public_note" field.
+func (_u *ChannelMonitorUpdateOne) SetPublicNote(v string) *ChannelMonitorUpdateOne {
+	_u.mutation.SetPublicNote(v)
+	return _u
+}
+
+// SetNillablePublicNote sets the "public_note" field if the given value is not nil.
+func (_u *ChannelMonitorUpdateOne) SetNillablePublicNote(v *string) *ChannelMonitorUpdateOne {
+	if v != nil {
+		_u.SetPublicNote(*v)
+	}
+	return _u
+}
+
+// ClearPublicNote clears the value of the "public_note" field.
+func (_u *ChannelMonitorUpdateOne) ClearPublicNote() *ChannelMonitorUpdateOne {
+	_u.mutation.ClearPublicNote()
+	return _u
+}
+
+// SetReportURL sets the "report_url" field.
+func (_u *ChannelMonitorUpdateOne) SetReportURL(v string) *ChannelMonitorUpdateOne {
+	_u.mutation.SetReportURL(v)
+	return _u
+}
+
+// SetNillableReportURL sets the "report_url" field if the given value is not nil.
+func (_u *ChannelMonitorUpdateOne) SetNillableReportURL(v *string) *ChannelMonitorUpdateOne {
+	if v != nil {
+		_u.SetReportURL(*v)
+	}
+	return _u
+}
+
+// ClearReportURL clears the value of the "report_url" field.
+func (_u *ChannelMonitorUpdateOne) ClearReportURL() *ChannelMonitorUpdateOne {
+	_u.mutation.ClearReportURL()
+	return _u
+}
+
+// SetExpectedInputTokens sets the "expected_input_tokens" field.
+func (_u *ChannelMonitorUpdateOne) SetExpectedInputTokens(v int) *ChannelMonitorUpdateOne {
+	_u.mutation.ResetExpectedInputTokens()
+	_u.mutation.SetExpectedInputTokens(v)
+	return _u
+}
+
+// SetNillableExpectedInputTokens sets the "expected_input_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorUpdateOne) SetNillableExpectedInputTokens(v *int) *ChannelMonitorUpdateOne {
+	if v != nil {
+		_u.SetExpectedInputTokens(*v)
+	}
+	return _u
+}
+
+// AddExpectedInputTokens adds value to the "expected_input_tokens" field.
+func (_u *ChannelMonitorUpdateOne) AddExpectedInputTokens(v int) *ChannelMonitorUpdateOne {
+	_u.mutation.AddExpectedInputTokens(v)
+	return _u
+}
+
+// ClearExpectedInputTokens clears the value of the "expected_input_tokens" field.
+func (_u *ChannelMonitorUpdateOne) ClearExpectedInputTokens() *ChannelMonitorUpdateOne {
+	_u.mutation.ClearExpectedInputTokens()
+	return _u
+}
+
 // AddHistoryIDs adds the "history" edge to the ChannelMonitorHistory entity by IDs.
 func (_u *ChannelMonitorUpdateOne) AddHistoryIDs(ids ...int64) *ChannelMonitorUpdateOne {
 	_u.mutation.AddHistoryIDs(ids...)
@@ -1299,6 +1558,16 @@ func (_u *ChannelMonitorUpdateOne) check() error {
 			return &ValidationError{Name: "body_override_mode", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.body_override_mode": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.PublicNote(); ok {
+		if err := channelmonitor.PublicNoteValidator(v); err != nil {
+			return &ValidationError{Name: "public_note", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.public_note": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.ReportURL(); ok {
+		if err := channelmonitor.ReportURLValidator(v); err != nil {
+			return &ValidationError{Name: "report_url", err: fmt.Errorf(`ent: validator failed for field "ChannelMonitor.report_url": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -1416,6 +1685,39 @@ func (_u *ChannelMonitorUpdateOne) sqlSave(ctx context.Context) (_node *ChannelM
 	}
 	if _u.mutation.BodyOverrideCleared() {
 		_spec.ClearField(channelmonitor.FieldBodyOverride, field.TypeJSON)
+	}
+	if value, ok := _u.mutation.GroupID(); ok {
+		_spec.SetField(channelmonitor.FieldGroupID, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedGroupID(); ok {
+		_spec.AddField(channelmonitor.FieldGroupID, field.TypeInt64, value)
+	}
+	if _u.mutation.GroupIDCleared() {
+		_spec.ClearField(channelmonitor.FieldGroupID, field.TypeInt64)
+	}
+	if value, ok := _u.mutation.PublicVisible(); ok {
+		_spec.SetField(channelmonitor.FieldPublicVisible, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.PublicNote(); ok {
+		_spec.SetField(channelmonitor.FieldPublicNote, field.TypeString, value)
+	}
+	if _u.mutation.PublicNoteCleared() {
+		_spec.ClearField(channelmonitor.FieldPublicNote, field.TypeString)
+	}
+	if value, ok := _u.mutation.ReportURL(); ok {
+		_spec.SetField(channelmonitor.FieldReportURL, field.TypeString, value)
+	}
+	if _u.mutation.ReportURLCleared() {
+		_spec.ClearField(channelmonitor.FieldReportURL, field.TypeString)
+	}
+	if value, ok := _u.mutation.ExpectedInputTokens(); ok {
+		_spec.SetField(channelmonitor.FieldExpectedInputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedExpectedInputTokens(); ok {
+		_spec.AddField(channelmonitor.FieldExpectedInputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.ExpectedInputTokensCleared() {
+		_spec.ClearField(channelmonitor.FieldExpectedInputTokens, field.TypeInt)
 	}
 	if _u.mutation.HistoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
