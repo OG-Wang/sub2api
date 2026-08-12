@@ -163,21 +163,29 @@ export function isChannelMonitorRouteEnabled(): boolean {
   return isFeatureFlagEnabled(FeatureFlags.channelMonitor)
 }
 
-export type ChannelMonitorMode = 'v1' | 'v2'
+export type ChannelMonitorMode = 'v1' | 'v2' | 'hybrid'
 
-/** Exclusive channel-monitor implementation. Invalid/missing → v1 (opt-in to v2). */
+/** Channel-monitor implementation. Invalid/missing → v1 (opt-in to the others). */
 export function getChannelMonitorMode(): ChannelMonitorMode {
   const appStore = useAppStore()
   const mode = appStore.cachedPublicSettings?.channel_monitor_mode
-  return mode === 'v2' ? 'v2' : 'v1'
+  if (mode === 'v2' || mode === 'hybrid') return mode
+  return 'v1'
 }
 
 export function isChannelMonitorV1Mode(): boolean {
-  return isChannelMonitorRouteEnabled() && getChannelMonitorMode() === 'v1'
+  const mode = getChannelMonitorMode()
+  return isChannelMonitorRouteEnabled() && (mode === 'v1' || mode === 'hybrid')
 }
 
 export function isChannelMonitorV2Mode(): boolean {
-  return isChannelMonitorRouteEnabled() && getChannelMonitorMode() === 'v2'
+  const mode = getChannelMonitorMode()
+  return isChannelMonitorRouteEnabled() && (mode === 'v2' || mode === 'hybrid')
+}
+
+/** Provider hall needs both V1 probe results and V2 user metrics, i.e. hybrid mode. */
+export function isProviderHallEnabled(): boolean {
+  return isChannelMonitorRouteEnabled() && getChannelMonitorMode() === 'hybrid'
 }
 
 export function getChannelMonitorRefreshIntervalSeconds(): number {
