@@ -78,7 +78,7 @@ func runCheckForModel(ctx context.Context, provider, endpoint, apiKey, model str
 	mode := bodyOverrideMode(opts)
 
 	start := time.Now()
-	respText, rawBody, statusCode, err := callProvider(ctx, provider, endpoint, apiKey, model, challenge.Prompt, opts)
+	respText, rawBody, statusCode, stream, err := callProvider(ctx, provider, endpoint, apiKey, model, challenge.Prompt, opts)
 	latency := time.Since(start)
 	latencyMs := int(latency / time.Millisecond)
 	res.LatencyMs = &latencyMs
@@ -99,7 +99,15 @@ func runCheckForModel(ctx context.Context, provider, endpoint, apiKey, model str
 
 	// 2xx 才取用量：错误响应里没有 usage，取了也只是噪声。
 	apiMode := checkAPIMode(opts)
-	res.InputTokens, res.OutputTokens = extractMonitorUsage(provider, apiMode, rawBody)
+	if stream != nil {
+		// 走了 SSE：TTFT 与用量都来自流解析。rawBody 是一串 data: 行，
+		// 用整包 JSON 的 path 去抽只会得到空值。
+		res.TTFTMs = stream.TTFTMs
+		res.InputTokens = stream.InputTokens
+		res.OutputTokens = stream.OutputTokens
+	} else {
+		res.InputTokens, res.OutputTokens = extractMonitorUsage(provider, apiMode, rawBody)
+	}
 
 	// 比对上游报的输入 token 与本地算出的真值。
 	// replace 模式下 body 完全由用户提供，challenge 没有参与请求，
@@ -225,6 +233,7 @@ var providerAdapters = map[string]providerAdapter{
 				"model":      model,
 				"messages":   []map[string]string{{"role": "user", "content": prompt}},
 				"max_tokens": monitorChallengeMaxTokens,
+				"stream":     true,
 			})
 		},
 		buildHeaders: func(apiKey string) map[string]string {
@@ -277,7 +286,10 @@ func newOpenAICompatibleChatAdapter(path string) providerAdapter {
 				"model":      model,
 				"messages":   []map[string]string{{"role": "user", "content": prompt}},
 				"max_tokens": monitorChallengeMaxTokens,
-				"stream":     false,
+				"stream":     true,
+				// OpenAI Chat 流式默认不返回 usage，必须显式开启，
+				// 否则拿不到 input/output token（注水检测就失效了）。
+				"stream_options": map[string]any{"include_usage": true},
 			})
 		},
 		buildHeaders: func(apiKey string) map[string]string {
@@ -296,7 +308,7 @@ var providerOpenAIResponsesAdapter = providerAdapter{
 			"instructions":      "You are a channel health-check endpoint. Answer the arithmetic challenge exactly and briefly.",
 			"input":             prompt,
 			"max_output_tokens": monitorChallengeMaxTokens,
-			"stream":            false,
+			"stream":            true,
 		})
 	},
 	buildHeaders: func(apiKey string) map[string]string {
@@ -318,33 +330,46 @@ func providerAdapterFor(provider, apiMode string) (providerAdapter, string, bool
 // opts 承载用户的自定义 headers / body 覆盖（可为 nil）。
 //
 // 返回值：
-//   - extractedText: 按 textPath 抽出的成功文本，仅在 status 2xx 时有意义；非 2xx 时通常为空串
+//   - extractedText: 成功文本。流式响应下是拼接后的全部增量；非流式下按 textPath 抽取。
+//     仅在 status 2xx 时有意义；非 2xx 时通常为空串
 //   - rawBody: 完整响应体的字符串形式（已被 monitorResponseMaxBytes 截断），用于错误路径保留上游真实回包
 //   - status: HTTP 状态码
+//   - stream: 流式解析结果（含 TTFT 与用量）；上游未走 SSE 时为 nil
 //   - err: 网络 / 序列化错误
-func callProvider(ctx context.Context, provider, endpoint, apiKey, model, prompt string, opts *CheckOptions) (extractedText, rawBody string, status int, err error) {
+func callProvider(
+	ctx context.Context, provider, endpoint, apiKey, model, prompt string, opts *CheckOptions,
+) (extractedText, rawBody string, status int, stream *monitorStreamResult, err error) {
 	requestedAPIMode := checkAPIMode(opts)
 	if err := validateAPIMode(provider, requestedAPIMode); err != nil {
-		return "", "", 0, err
+		return "", "", 0, nil, err
 	}
 	adapter, apiMode, ok := providerAdapterFor(provider, requestedAPIMode)
 	if !ok {
-		return "", "", 0, fmt.Errorf("unsupported provider %q", provider)
+		return "", "", 0, nil, fmt.Errorf("unsupported provider %q", provider)
 	}
 	body, err := buildRequestBody(adapter, provider, apiMode, model, prompt, opts)
 	if err != nil {
-		return "", "", 0, err
+		return "", "", 0, nil, err
 	}
 	headers := mergeHeaders(adapter.buildHeaders(apiKey), opts)
 	full := joinURL(endpoint, adapter.buildPath(model))
-	respBytes, status, err := postRawJSON(ctx, full, body, headers)
+
+	decoder, hasDecoder := monitorStreamDecoderFor(provider, apiMode)
+	respBytes, status, stream, err := postRawJSON(ctx, full, body, headers, decoder, hasDecoder)
 	if err != nil {
-		return "", "", status, err
+		return "", "", status, nil, err
 	}
+
+	// 走了 SSE：文本已在解析时拼好，不能再按整包 JSON 的 textPath 去抽
+	// （SSE 的 raw 是一串 data: 行，textPath 抽不出东西）。
+	if stream != nil {
+		return stream.Text, string(respBytes), status, stream, nil
+	}
+
 	if provider == MonitorProviderOpenAI && apiMode == MonitorAPIModeResponses {
-		return extractOpenAIResponsesText(respBytes), string(respBytes), status, nil
+		return extractOpenAIResponsesText(respBytes), string(respBytes), status, nil, nil
 	}
-	return extractMonitorResponseText(adapter, respBytes), string(respBytes), status, nil
+	return extractMonitorResponseText(adapter, respBytes), string(respBytes), status, nil, nil
 }
 
 func extractMonitorResponseText(adapter providerAdapter, respBytes []byte) string {
@@ -568,30 +593,51 @@ func hasNonEmptyBodyValue(v any) bool {
 	}
 }
 
-// postRawJSON 发送 POST + 已序列化好的 JSON 字节，限制响应体大小，返回响应字节、HTTP status、错误。
+// postRawJSON 发送 POST + 已序列化好的 JSON 字节，限制响应体大小。
 // adapter 自行 marshal 是为了精确控制字段顺序与类型，所以这里直接收 []byte 而不是 any。
-func postRawJSON(ctx context.Context, fullURL string, payload []byte, headers map[string]string) ([]byte, int, error) {
+//
+// 按响应 Content-Type 分流：
+//   - text/event-stream → 边读边解析 SSE，返回 TTFT / 拼接文本 / 用量
+//   - 其他              → 整包读回，stream 为 nil，由调用方按 JSON 解析
+//
+// decoder 为该 provider 的 SSE 解码器；hasDecoder 为 false 时一律按整包处理。
+func postRawJSON(
+	ctx context.Context,
+	fullURL string,
+	payload []byte,
+	headers map[string]string,
+	decoder monitorStreamDecoder,
+	hasDecoder bool,
+) ([]byte, int, *monitorStreamResult, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fullURL, bytes.NewReader(payload))
 	if err != nil {
-		return nil, 0, fmt.Errorf("build request: %w", err)
+		return nil, 0, nil, fmt.Errorf("build request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
+	// 同时接受两种响应：请求体里开了 stream，但上游可能忽略它退回整包 JSON。
+	req.Header.Set("Accept", "text/event-stream, application/json")
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
 
+	// TTFT 相对请求发出的时刻计算，必须在 Do 之前取。
+	start := time.Now()
 	resp, err := monitorHTTPClient.Do(req)
 	if err != nil {
-		return nil, 0, fmt.Errorf("do request: %w", err)
+		return nil, 0, nil, fmt.Errorf("do request: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
+	if hasDecoder && isSSEResponse(resp.Header.Get("Content-Type")) {
+		result, raw := parseMonitorStream(resp.Body, decoder, start, monitorResponseMaxBytes)
+		return raw, resp.StatusCode, result, nil
+	}
+
 	respBody, err := io.ReadAll(io.LimitReader(resp.Body, monitorResponseMaxBytes))
 	if err != nil {
-		return nil, resp.StatusCode, fmt.Errorf("read body: %w", err)
+		return nil, resp.StatusCode, nil, fmt.Errorf("read body: %w", err)
 	}
-	return respBody, resp.StatusCode, nil
+	return respBody, resp.StatusCode, nil, nil
 }
 
 // joinURL 把 base origin 与 path 拼成完整 URL。
