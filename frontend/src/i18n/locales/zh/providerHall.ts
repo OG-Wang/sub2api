@@ -86,8 +86,7 @@ export default {
     useGroup: '使用此分组',
     noGroupLinked: '该监控项未关联真实分组，无法直接创建 API Key',
     report: '检测报告',
-    inflated: '疑似注水',
-    inflatedHint: '上游报告的输入 Token 明显高于该请求应有的数量',
-    inflatedDetail: '上游报告输入 {actual} token，本地算出应为 {expected} 左右，可能被注入了额外内容',
+    expectedInput: '当前提示词输入Token应为 {expected}',
+    expectedInputTotal: '上游报告总输入 {actual}（其中缓存命中 {cached}）',
   },
 }
