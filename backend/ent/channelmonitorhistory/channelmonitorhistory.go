@@ -33,6 +33,8 @@ const (
 	FieldTtftMs = "ttft_ms"
 	// FieldInputTokens holds the string denoting the input_tokens field in the database.
 	FieldInputTokens = "input_tokens"
+	// FieldCachedInputTokens holds the string denoting the cached_input_tokens field in the database.
+	FieldCachedInputTokens = "cached_input_tokens"
 	// FieldOutputTokens holds the string denoting the output_tokens field in the database.
 	FieldOutputTokens = "output_tokens"
 	// EdgeMonitor holds the string denoting the monitor edge name in mutations.
@@ -60,6 +62,7 @@ var Columns = []string{
 	FieldCheckedAt,
 	FieldTtftMs,
 	FieldInputTokens,
+	FieldCachedInputTokens,
 	FieldOutputTokens,
 }
 
@@ -160,6 +163,11 @@ func ByTtftMs(opts ...sql.OrderTermOption) OrderOption {
 // ByInputTokens orders the results by the input_tokens field.
 func ByInputTokens(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldInputTokens, opts...).ToFunc()
+}
+
+// ByCachedInputTokens orders the results by the cached_input_tokens field.
+func ByCachedInputTokens(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCachedInputTokens, opts...).ToFunc()
 }
 
 // ByOutputTokens orders the results by the output_tokens field.

@@ -104,9 +104,10 @@ func runCheckForModel(ctx context.Context, provider, endpoint, apiKey, model str
 		// 用整包 JSON 的 path 去抽只会得到空值。
 		res.TTFTMs = stream.TTFTMs
 		res.InputTokens = stream.InputTokens
+		res.CachedInputTokens = stream.CachedInputTokens
 		res.OutputTokens = stream.OutputTokens
 	} else {
-		res.InputTokens, res.OutputTokens = extractMonitorUsage(provider, apiMode, rawBody)
+		res.InputTokens, res.CachedInputTokens, res.OutputTokens = extractMonitorUsage(provider, apiMode, rawBody)
 	}
 
 	// 比对上游报的输入 token 与本地算出的真值。

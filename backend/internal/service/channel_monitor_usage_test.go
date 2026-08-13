@@ -54,7 +54,7 @@ func TestExtractMonitorUsagePerProvider(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			in, out := extractMonitorUsage(tc.provider, tc.apiMode, tc.body)
+			in, _, out := extractMonitorUsage(tc.provider, tc.apiMode, tc.body)
 			if in == nil || *in != tc.wantInput {
 				t.Errorf("input tokens = %v, want %d", in, tc.wantInput)
 			}
@@ -79,7 +79,7 @@ func TestExtractMonitorUsageMissingReturnsNil(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			in, out := extractMonitorUsage(MonitorProviderAnthropic, MonitorAPIModeChatCompletions, tc.body)
+			in, _, out := extractMonitorUsage(MonitorProviderAnthropic, MonitorAPIModeChatCompletions, tc.body)
 			if in != nil {
 				t.Errorf("input tokens = %d, want nil", *in)
 			}
@@ -91,7 +91,7 @@ func TestExtractMonitorUsageMissingReturnsNil(t *testing.T) {
 }
 
 func TestExtractMonitorUsageUnknownProvider(t *testing.T) {
-	in, out := extractMonitorUsage("unknown", MonitorAPIModeChatCompletions, `{"usage":{"input_tokens":5}}`)
+	in, _, out := extractMonitorUsage("unknown", MonitorAPIModeChatCompletions, `{"usage":{"input_tokens":5}}`)
 	if in != nil || out != nil {
 		t.Errorf("unknown provider should yield nil usage, got in=%v out=%v", in, out)
 	}

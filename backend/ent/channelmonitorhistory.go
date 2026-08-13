@@ -34,8 +34,10 @@ type ChannelMonitorHistory struct {
 	CheckedAt time.Time `json:"checked_at,omitempty"`
 	// Time to first token in ms; only available for streaming probes
 	TtftMs *int `json:"ttft_ms,omitempty"`
-	// Upstream-reported prompt tokens; constant probe prompt makes deviation meaningful
+	// Upstream-reported prompt tokens including cache hits; constant probe prompt makes deviation meaningful
 	InputTokens *int `json:"input_tokens,omitempty"`
+	// Portion of input_tokens served from prompt cache
+	CachedInputTokens *int `json:"cached_input_tokens,omitempty"`
 	// Upstream-reported completion tokens
 	OutputTokens *int `json:"output_tokens,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -69,7 +71,7 @@ func (*ChannelMonitorHistory) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case channelmonitorhistory.FieldID, channelmonitorhistory.FieldMonitorID, channelmonitorhistory.FieldLatencyMs, channelmonitorhistory.FieldPingLatencyMs, channelmonitorhistory.FieldTtftMs, channelmonitorhistory.FieldInputTokens, channelmonitorhistory.FieldOutputTokens:
+		case channelmonitorhistory.FieldID, channelmonitorhistory.FieldMonitorID, channelmonitorhistory.FieldLatencyMs, channelmonitorhistory.FieldPingLatencyMs, channelmonitorhistory.FieldTtftMs, channelmonitorhistory.FieldInputTokens, channelmonitorhistory.FieldCachedInputTokens, channelmonitorhistory.FieldOutputTokens:
 			values[i] = new(sql.NullInt64)
 		case channelmonitorhistory.FieldModel, channelmonitorhistory.FieldStatus, channelmonitorhistory.FieldMessage:
 			values[i] = new(sql.NullString)
@@ -154,6 +156,13 @@ func (_m *ChannelMonitorHistory) assignValues(columns []string, values []any) er
 				_m.InputTokens = new(int)
 				*_m.InputTokens = int(value.Int64)
 			}
+		case channelmonitorhistory.FieldCachedInputTokens:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field cached_input_tokens", values[i])
+			} else if value.Valid {
+				_m.CachedInputTokens = new(int)
+				*_m.CachedInputTokens = int(value.Int64)
+			}
 		case channelmonitorhistory.FieldOutputTokens:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field output_tokens", values[i])
@@ -234,6 +243,11 @@ func (_m *ChannelMonitorHistory) String() string {
 	builder.WriteString(", ")
 	if v := _m.InputTokens; v != nil {
 		builder.WriteString("input_tokens=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
+	builder.WriteString(", ")
+	if v := _m.CachedInputTokens; v != nil {
+		builder.WriteString("cached_input_tokens=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")

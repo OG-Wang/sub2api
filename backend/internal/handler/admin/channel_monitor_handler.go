@@ -128,31 +128,33 @@ type channelMonitorResponse struct {
 }
 
 type channelMonitorCheckResultResponse struct {
-	Model         string `json:"model"`
-	Status        string `json:"status"`
-	LatencyMs     *int   `json:"latency_ms"`
-	PingLatencyMs *int   `json:"ping_latency_ms"`
-	Message       string `json:"message"`
-	CheckedAt     string `json:"checked_at"`
-	TTFTMs        *int   `json:"ttft_ms"`
-	InputTokens   *int   `json:"input_tokens"`
-	OutputTokens  *int   `json:"output_tokens"`
+	Model             string `json:"model"`
+	Status            string `json:"status"`
+	LatencyMs         *int   `json:"latency_ms"`
+	PingLatencyMs     *int   `json:"ping_latency_ms"`
+	Message           string `json:"message"`
+	CheckedAt         string `json:"checked_at"`
+	TTFTMs            *int   `json:"ttft_ms"`
+	InputTokens       *int   `json:"input_tokens"`
+	CachedInputTokens *int   `json:"cached_input_tokens"`
+	OutputTokens      *int   `json:"output_tokens"`
 	// ExpectedInputTokens 本地算出的应计输入 token，供管理员与实测值对照。
 	ExpectedInputTokens *int `json:"expected_input_tokens"`
 	InputTokensInflated bool `json:"input_tokens_inflated"`
 }
 
 type channelMonitorHistoryItemResponse struct {
-	ID            int64  `json:"id"`
-	Model         string `json:"model"`
-	Status        string `json:"status"`
-	LatencyMs     *int   `json:"latency_ms"`
-	PingLatencyMs *int   `json:"ping_latency_ms"`
-	Message       string `json:"message"`
-	CheckedAt     string `json:"checked_at"`
-	TTFTMs        *int   `json:"ttft_ms"`
-	InputTokens   *int   `json:"input_tokens"`
-	OutputTokens  *int   `json:"output_tokens"`
+	ID                int64  `json:"id"`
+	Model             string `json:"model"`
+	Status            string `json:"status"`
+	LatencyMs         *int   `json:"latency_ms"`
+	PingLatencyMs     *int   `json:"ping_latency_ms"`
+	Message           string `json:"message"`
+	CheckedAt         string `json:"checked_at"`
+	TTFTMs            *int   `json:"ttft_ms"`
+	InputTokens       *int   `json:"input_tokens"`
+	CachedInputTokens *int   `json:"cached_input_tokens"`
+	OutputTokens      *int   `json:"output_tokens"`
 }
 
 // maskAPIKey 对 API Key 明文做脱敏：前 4 字符 + "***"，长度 ≤ 4 时只显示 "***"。
@@ -212,15 +214,16 @@ func channelMonitorToResponse(m *service.ChannelMonitor) *channelMonitorResponse
 
 func checkResultToResponse(r *service.CheckResult) channelMonitorCheckResultResponse {
 	return channelMonitorCheckResultResponse{
-		Model:         r.Model,
-		Status:        r.Status,
-		LatencyMs:     r.LatencyMs,
-		PingLatencyMs: r.PingLatencyMs,
-		Message:       r.Message,
-		CheckedAt:     r.CheckedAt.UTC().Format(time.RFC3339),
-		TTFTMs:        r.TTFTMs,
-		InputTokens:   r.InputTokens,
-		OutputTokens:  r.OutputTokens,
+		Model:             r.Model,
+		Status:            r.Status,
+		LatencyMs:         r.LatencyMs,
+		PingLatencyMs:     r.PingLatencyMs,
+		Message:           r.Message,
+		CheckedAt:         r.CheckedAt.UTC().Format(time.RFC3339),
+		TTFTMs:            r.TTFTMs,
+		InputTokens:       r.InputTokens,
+		CachedInputTokens: r.CachedInputTokens,
+		OutputTokens:      r.OutputTokens,
 
 		ExpectedInputTokens: r.ExpectedInputTokens,
 		InputTokensInflated: r.InputTokensInflated,
@@ -229,16 +232,17 @@ func checkResultToResponse(r *service.CheckResult) channelMonitorCheckResultResp
 
 func historyEntryToResponse(e *service.ChannelMonitorHistoryEntry) channelMonitorHistoryItemResponse {
 	return channelMonitorHistoryItemResponse{
-		ID:            e.ID,
-		Model:         e.Model,
-		Status:        e.Status,
-		LatencyMs:     e.LatencyMs,
-		PingLatencyMs: e.PingLatencyMs,
-		Message:       e.Message,
-		CheckedAt:     e.CheckedAt.UTC().Format(time.RFC3339),
-		TTFTMs:        e.TTFTMs,
-		InputTokens:   e.InputTokens,
-		OutputTokens:  e.OutputTokens,
+		ID:                e.ID,
+		Model:             e.Model,
+		Status:            e.Status,
+		LatencyMs:         e.LatencyMs,
+		PingLatencyMs:     e.PingLatencyMs,
+		Message:           e.Message,
+		CheckedAt:         e.CheckedAt.UTC().Format(time.RFC3339),
+		TTFTMs:            e.TTFTMs,
+		InputTokens:       e.InputTokens,
+		CachedInputTokens: e.CachedInputTokens,
+		OutputTokens:      e.OutputTokens,
 	}
 }
 

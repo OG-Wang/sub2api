@@ -213,6 +213,33 @@ func (_u *ChannelMonitorHistoryUpdate) ClearInputTokens() *ChannelMonitorHistory
 	return _u
 }
 
+// SetCachedInputTokens sets the "cached_input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) SetCachedInputTokens(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.ResetCachedInputTokens()
+	_u.mutation.SetCachedInputTokens(v)
+	return _u
+}
+
+// SetNillableCachedInputTokens sets the "cached_input_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdate) SetNillableCachedInputTokens(v *int) *ChannelMonitorHistoryUpdate {
+	if v != nil {
+		_u.SetCachedInputTokens(*v)
+	}
+	return _u
+}
+
+// AddCachedInputTokens adds value to the "cached_input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) AddCachedInputTokens(v int) *ChannelMonitorHistoryUpdate {
+	_u.mutation.AddCachedInputTokens(v)
+	return _u
+}
+
+// ClearCachedInputTokens clears the value of the "cached_input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdate) ClearCachedInputTokens() *ChannelMonitorHistoryUpdate {
+	_u.mutation.ClearCachedInputTokens()
+	return _u
+}
+
 // SetOutputTokens sets the "output_tokens" field.
 func (_u *ChannelMonitorHistoryUpdate) SetOutputTokens(v int) *ChannelMonitorHistoryUpdate {
 	_u.mutation.ResetOutputTokens()
@@ -368,6 +395,15 @@ func (_u *ChannelMonitorHistoryUpdate) sqlSave(ctx context.Context) (_node int, 
 	}
 	if _u.mutation.InputTokensCleared() {
 		_spec.ClearField(channelmonitorhistory.FieldInputTokens, field.TypeInt)
+	}
+	if value, ok := _u.mutation.CachedInputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldCachedInputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCachedInputTokens(); ok {
+		_spec.AddField(channelmonitorhistory.FieldCachedInputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.CachedInputTokensCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldCachedInputTokens, field.TypeInt)
 	}
 	if value, ok := _u.mutation.OutputTokens(); ok {
 		_spec.SetField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)
@@ -611,6 +647,33 @@ func (_u *ChannelMonitorHistoryUpdateOne) ClearInputTokens() *ChannelMonitorHist
 	return _u
 }
 
+// SetCachedInputTokens sets the "cached_input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) SetCachedInputTokens(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ResetCachedInputTokens()
+	_u.mutation.SetCachedInputTokens(v)
+	return _u
+}
+
+// SetNillableCachedInputTokens sets the "cached_input_tokens" field if the given value is not nil.
+func (_u *ChannelMonitorHistoryUpdateOne) SetNillableCachedInputTokens(v *int) *ChannelMonitorHistoryUpdateOne {
+	if v != nil {
+		_u.SetCachedInputTokens(*v)
+	}
+	return _u
+}
+
+// AddCachedInputTokens adds value to the "cached_input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) AddCachedInputTokens(v int) *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.AddCachedInputTokens(v)
+	return _u
+}
+
+// ClearCachedInputTokens clears the value of the "cached_input_tokens" field.
+func (_u *ChannelMonitorHistoryUpdateOne) ClearCachedInputTokens() *ChannelMonitorHistoryUpdateOne {
+	_u.mutation.ClearCachedInputTokens()
+	return _u
+}
+
 // SetOutputTokens sets the "output_tokens" field.
 func (_u *ChannelMonitorHistoryUpdateOne) SetOutputTokens(v int) *ChannelMonitorHistoryUpdateOne {
 	_u.mutation.ResetOutputTokens()
@@ -796,6 +859,15 @@ func (_u *ChannelMonitorHistoryUpdateOne) sqlSave(ctx context.Context) (_node *C
 	}
 	if _u.mutation.InputTokensCleared() {
 		_spec.ClearField(channelmonitorhistory.FieldInputTokens, field.TypeInt)
+	}
+	if value, ok := _u.mutation.CachedInputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldCachedInputTokens, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedCachedInputTokens(); ok {
+		_spec.AddField(channelmonitorhistory.FieldCachedInputTokens, field.TypeInt, value)
+	}
+	if _u.mutation.CachedInputTokensCleared() {
+		_spec.ClearField(channelmonitorhistory.FieldCachedInputTokens, field.TypeInt)
 	}
 	if value, ok := _u.mutation.OutputTokens(); ok {
 		_spec.SetField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)

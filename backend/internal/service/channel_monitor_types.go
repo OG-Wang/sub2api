@@ -157,9 +157,12 @@ type CheckResult struct {
 	// ---- 探测指标（供应商大厅）----
 	// TTFTMs 仅流式探测能测到；InputTokens / OutputTokens 取自上游报告的 usage。
 	// 三者都可能为 nil：上游没报、检测失败、或还没改成流式。
-	TTFTMs       *int
-	InputTokens  *int
-	OutputTokens *int
+	TTFTMs *int
+	// InputTokens 上游报告的总输入（含缓存命中）；CachedInputTokens 是其中的缓存部分。
+	// 两者相减 = 网关用量记录里的 input 口径。
+	InputTokens       *int
+	CachedInputTokens *int
+	OutputTokens      *int
 
 	// ExpectedInputTokens 本地算出的「应计输入 token」，用于和上游报数比对。
 	// 不落库：由 prompt 与协议决定，任何时候都能重算。
@@ -192,9 +195,10 @@ type UserMonitorTimelinePoint struct {
 	PingLatencyMs *int      `json:"ping_latency_ms"`
 	CheckedAt     time.Time `json:"checked_at"`
 	// 以下三项供供应商大厅的曲线切换「首Token / TPS / 输入Token」使用。
-	TTFTMs       *int `json:"ttft_ms"`
-	InputTokens  *int `json:"input_tokens"`
-	OutputTokens *int `json:"output_tokens"`
+	TTFTMs            *int `json:"ttft_ms"`
+	InputTokens       *int `json:"input_tokens"`
+	CachedInputTokens *int `json:"cached_input_tokens"`
+	OutputTokens      *int `json:"output_tokens"`
 }
 
 // ExtraModelStatus 附加模型最近一次状态。
@@ -226,42 +230,45 @@ type ModelDetail struct {
 
 // ChannelMonitorHistoryRow 历史记录入库行（service 层向 repository 提交的数据）。
 type ChannelMonitorHistoryRow struct {
-	MonitorID     int64
-	Model         string
-	Status        string
-	LatencyMs     *int
-	PingLatencyMs *int
-	Message       string
-	CheckedAt     time.Time
-	TTFTMs        *int
-	InputTokens   *int
-	OutputTokens  *int
+	MonitorID         int64
+	Model             string
+	Status            string
+	LatencyMs         *int
+	PingLatencyMs     *int
+	Message           string
+	CheckedAt         time.Time
+	TTFTMs            *int
+	InputTokens       *int
+	CachedInputTokens *int
+	OutputTokens      *int
 }
 
 // ChannelMonitorHistoryEntry 历史记录查询返回行（含 ent 主键 ID）。
 type ChannelMonitorHistoryEntry struct {
-	ID            int64
-	Model         string
-	Status        string
-	LatencyMs     *int
-	PingLatencyMs *int
-	Message       string
-	CheckedAt     time.Time
-	TTFTMs        *int
-	InputTokens   *int
-	OutputTokens  *int
+	ID                int64
+	Model             string
+	Status            string
+	LatencyMs         *int
+	PingLatencyMs     *int
+	Message           string
+	CheckedAt         time.Time
+	TTFTMs            *int
+	InputTokens       *int
+	CachedInputTokens *int
+	OutputTokens      *int
 }
 
 // ChannelMonitorLatest 最近一次检测的简明信息（用于 UserMonitorView 聚合）。
 type ChannelMonitorLatest struct {
-	Model         string
-	Status        string
-	LatencyMs     *int
-	PingLatencyMs *int
-	CheckedAt     time.Time
-	TTFTMs        *int
-	InputTokens   *int
-	OutputTokens  *int
+	Model             string
+	Status            string
+	LatencyMs         *int
+	PingLatencyMs     *int
+	CheckedAt         time.Time
+	TTFTMs            *int
+	InputTokens       *int
+	CachedInputTokens *int
+	OutputTokens      *int
 }
 
 // ChannelMonitorAvailability 单个模型在某窗口内的可用率与平均延迟（用于 UserMonitorDetail 聚合）。

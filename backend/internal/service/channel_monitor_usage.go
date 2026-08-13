@@ -72,33 +72,34 @@ func monitorUsagePathsFor(provider, apiMode string) (monitorUsagePaths, bool) {
 	return paths, ok
 }
 
-// extractMonitorUsage 从成功响应体里取输入/输出 token 数。
+// extractMonitorUsage 从成功响应体里取用量。
 //
-// 输入返回的是**净输入**：扣掉缓存命中的部分，与网关用量记录里的 input 口径一致。
-// 不扣的话拿到的是「含缓存的总输入」，会比实际提交的内容大出一截，
-// 注水检测会因此全线误报。
+// inputTokens 是「模型实际处理的总输入」，含缓存命中的部分。
+// 刻意不在这里扣掉缓存：探测反复发送相同内容，缓存命中率会一路走高，
+// 净输入随之趋近 0，既画不出有意义的曲线，也没法用于注水检测。
+// 缓存量单独返回，需要与网关用量记录对账时用 input - cached。
 //
 // 字段缺失、非数字或为负都返回 nil —— 上游没报用量不是错误，
 // 只是这次探测拿不到这个指标。
-func extractMonitorUsage(provider, apiMode, rawBody string) (inputTokens, outputTokens *int) {
+func extractMonitorUsage(provider, apiMode, rawBody string) (inputTokens, cachedInputTokens, outputTokens *int) {
 	if rawBody == "" {
-		return nil, nil
+		return nil, nil, nil
 	}
 	paths, ok := monitorUsagePathsFor(provider, apiMode)
 	if !ok {
-		return nil, nil
+		return nil, nil, nil
 	}
-	input := extractMonitorTokenCount(rawBody, paths.inputTokens)
-	cached := extractMonitorTokenCount(rawBody, paths.cachedInputTokens)
-	return subtractCachedInput(input, cached), extractMonitorTokenCount(rawBody, paths.outputTokens)
+	return extractMonitorTokenCount(rawBody, paths.inputTokens),
+		extractMonitorTokenCount(rawBody, paths.cachedInputTokens),
+		extractMonitorTokenCount(rawBody, paths.outputTokens)
 }
 
-// subtractCachedInput 从总输入里扣掉缓存命中部分。
+// monitorNetInputTokens 净输入 = 总输入 - 缓存命中，即网关用量记录里的 input 口径。
 //
-// cached 为 nil（该 provider 无需扣减，或上游没报缓存）时原样返回。
-// 结果为负时返回 0 而不是负数：负数只可能是上游字段语义与预期不符，
-// 与其把一个不可能的值写进库，不如落成 0 让异常显形。
-func subtractCachedInput(input, cached *int) *int {
+// Anthropic 的 input_tokens 本身已排除缓存，其 cachedInputTokens 恒为 nil，
+// 因此这里原样返回，不会重复扣减。
+// 结果为负只可能是上游字段语义与预期不符，落成 0 让异常显形。
+func monitorNetInputTokens(input, cached *int) *int {
 	if input == nil || cached == nil {
 		return input
 	}
