@@ -201,7 +201,6 @@ export default {
     channelPricing: 'Channel Pricing',
     channelMonitor: 'Channel Monitor',
     channelStatus: 'Channel Status',
-    providerHall: 'Provider Hall',
     riskControl: 'Risk Control',
     securityAudit: 'Security Audit',
     contentModeration: 'Content Moderation',
