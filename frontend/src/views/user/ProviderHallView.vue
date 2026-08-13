@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
-              {{ t('providerHall.title') }}
+              {{ t('nav.channelStatus') }}
             </h1>
             <p class="mt-0.5 text-sm text-gray-500 dark:text-dark-400">
               {{ t('providerHall.description') }}
@@ -27,7 +27,7 @@
         </div>
       </template>
 
-      <template v-if="hallEnabled" #filters>
+      <template #filters>
         <!-- 平台分页签 + 时间窗口 -->
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-dark-600 dark:bg-dark-900/40">
@@ -57,26 +57,18 @@
       </template>
 
       <template #table>
-        <div v-if="!hallEnabled" class="p-8">
-          <EmptyState
-            :title="t('providerHall.disabledTitle')"
-            :description="t('providerHall.disabledHint')"
-          />
-        </div>
+        <p v-if="!passiveAvailable" class="px-4 pt-3 text-xs text-amber-600 dark:text-amber-400">
+          {{ t('providerHall.passiveUnavailable') }}
+        </p>
 
-        <template v-else>
-          <p v-if="!passiveAvailable" class="px-4 pt-3 text-xs text-amber-600 dark:text-amber-400">
-            {{ t('providerHall.passiveUnavailable') }}
-          </p>
-
-          <DataTable
-            :columns="columns"
-            :data="visibleRows"
-            :loading="loading"
-            row-key="id"
-            default-sort-key="availability"
-            default-sort-order="desc"
-          >
+        <DataTable
+          :columns="columns"
+          :data="visibleRows"
+          :loading="loading"
+          row-key="id"
+          default-sort-key="availability"
+          default-sort-order="desc"
+        >
         <!-- 分组 -->
         <template #cell-group="{ row }">
           <div class="flex flex-col gap-0.5">
@@ -97,20 +89,25 @@
 
         <!-- 最新状态 -->
         <template #cell-status="{ row }">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-col items-start gap-1">
             <span
               class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px]"
               :class="statusBadgeClass(row.primary_status)"
             >
               {{ statusLabel(row.primary_status) }}
             </span>
-            <span v-if="row.extra_models.length" class="flex items-center gap-1">
+            <span
+              v-for="m in modelStatuses(row)"
+              :key="m.model"
+              class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] leading-tight"
+              :class="statusBadgeClass(m.status)"
+              :title="`${m.model}: ${statusLabel(m.status)}`"
+            >
+              {{ m.model }}
               <span
-                v-for="m in row.extra_models"
-                :key="m.model"
-                class="h-2 w-2 rounded-full"
+                class="h-1.5 w-1.5 shrink-0 rounded-full"
                 :class="statusDotClass(m.status)"
-                :title="`${m.model}: ${statusLabel(m.status)}`"
+                aria-hidden="true"
               />
             </span>
           </div>
@@ -176,14 +173,13 @@
           </div>
         </template>
 
-            <template #empty>
-              <EmptyState
-                :title="t('providerHall.emptyTitle')"
-                :description="t('providerHall.emptyHint')"
-              />
-            </template>
-          </DataTable>
+        <template #empty>
+          <EmptyState
+            :title="t('providerHall.emptyTitle')"
+            :description="t('providerHall.emptyHint')"
+          />
         </template>
+        </DataTable>
       </template>
     </TablePageLayout>
 
@@ -200,7 +196,10 @@
 
 <script setup lang="ts">
 /**
- * 供应商大厅。
+ * 「渠道状态」的 V1 + V2 并存视图（原独立页面「供应商大厅」）。
+ *
+ * 由 ChannelStatusView 在 hybrid 模式下挂载，没有独立路由——
+ * 所以这里不再自查模式，能渲染就说明两套数据都在。
  *
  * 三份数据在前端按 group_id join（见 api/providerHall.ts），
  * 不新增后端聚合接口。
@@ -209,7 +208,6 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { extractApiErrorMessage } from '@/utils/apiError'
-import { isProviderHallEnabled } from '@/utils/featureFlags'
 import {
   loadHallRows,
   rowMatchesTab,
@@ -232,8 +230,6 @@ const { t } = useI18n()
 const appStore = useAppStore()
 
 const PLATFORM_TABS: HallPlatformTab[] = ['openai', 'anthropic', 'other']
-
-const hallEnabled = computed(() => isProviderHallEnabled())
 
 const loading = ref(false)
 const rows = ref<HallRow[]>([])
@@ -308,6 +304,27 @@ function statusLabel(status: string): string {
   return t(`providerHall.status.${status}`, status)
 }
 
+/**
+ * 「最新状态」列的模型胶囊：主模型排第一，附加模型按配置顺序跟随。
+ *
+ * 主模型的状态在响应里是平铺的（primary_model / primary_status），
+ * 附加模型在 extra_models 里，这里拼成同构的一串，模板只管画。
+ * 模型名直接用上游原始 ID，不做截短。
+ */
+function modelStatuses(row: HallRow): Array<{ model: string; status: string }> {
+  const out: Array<{ model: string; status: string }> = []
+  const seen = new Set<string>()
+  const push = (model: string, status: string) => {
+    // 附加模型里重复填了主模型时会拿到两条同名记录，去重避免 key 冲突。
+    if (!model || seen.has(model)) return
+    seen.add(model)
+    out.push({ model, status })
+  }
+  push(row.primary_model, row.primary_status)
+  for (const m of row.extra_models) push(m.model, m.status)
+  return out
+}
+
 function statusBadgeClass(status: string): string {
   switch (status) {
     case 'operational':
@@ -363,7 +380,7 @@ function useGroup(row: HallRow) {
 }
 
 async function reload() {
-  if (!hallEnabled.value || loading.value) return
+  if (loading.value) return
   loading.value = true
   try {
     const result = await loadHallRows({
