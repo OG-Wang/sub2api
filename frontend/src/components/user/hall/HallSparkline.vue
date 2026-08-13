@@ -44,7 +44,7 @@
  */
 import { computed } from 'vue'
 import type { HallRow } from '@/api/providerHall'
-import { computeTps } from '@/api/providerHall'
+import { computeTps, netInputTokens } from '@/api/providerHall'
 
 /** 曲线可切换的指标。 */
 export type HallSparklineMetric = 'ttft' | 'tps' | 'inputTokens'
@@ -62,7 +62,12 @@ const probeSeries = computed<number[]>(() => {
   const points = [...props.row.timeline].reverse()
   const values: number[] = []
   for (const p of points) {
-    const v = pickProbeMetric(p.ttft_ms, p.latency_ms, p.input_tokens, p.output_tokens)
+    const v = pickProbeMetric(
+      p.ttft_ms,
+      p.latency_ms,
+      netInputTokens(p.input_tokens, p.cached_input_tokens),
+      p.output_tokens,
+    )
     if (v != null) values.push(v)
   }
   return values
@@ -71,7 +76,7 @@ const probeSeries = computed<number[]>(() => {
 function pickProbeMetric(
   ttftMs: number | null,
   latencyMs: number | null,
-  inputTokens: number | null,
+  netInput: number | null,
   outputTokens: number | null,
 ): number | null {
   switch (props.metric) {
@@ -81,7 +86,8 @@ function pickProbeMetric(
     case 'tps':
       return computeTps(outputTokens, latencyMs, ttftMs)
     case 'inputTokens':
-      return inputTokens
+      // 与第 4 列口径一致：净输入（扣掉缓存命中）。
+      return netInput
     default:
       return null
   }
