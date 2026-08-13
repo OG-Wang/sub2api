@@ -68,7 +68,15 @@ var openAIChatStreamDecoder = monitorStreamDecoder{
 	textDelta: func(e gjson.Result) string { return e.Get("choices.0.delta.content").String() },
 	// OpenAI Chat 的用量只在最后一个 chunk 里，且必须请求时带
 	// stream_options.include_usage=true，否则根本不返回（见 buildBody）。
-	inputTokens:  func(e gjson.Result) *int { return streamTokenCount(e, "usage.prompt_tokens") },
+	//
+	// prompt_tokens 含缓存命中，要减掉 cached_tokens 才是本次真正提交的内容，
+	// 与网关用量记录的 input 口径一致。
+	inputTokens: func(e gjson.Result) *int {
+		return subtractCachedInput(
+			streamTokenCount(e, "usage.prompt_tokens"),
+			streamTokenCount(e, "usage.prompt_tokens_details.cached_tokens"),
+		)
+	},
 	outputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usage.completion_tokens") },
 }
 
@@ -80,7 +88,12 @@ var openAIResponsesStreamDecoder = monitorStreamDecoder{
 		}
 		return ""
 	},
-	inputTokens:  func(e gjson.Result) *int { return streamTokenCount(e, "response.usage.input_tokens") },
+	inputTokens: func(e gjson.Result) *int {
+		return subtractCachedInput(
+			streamTokenCount(e, "response.usage.input_tokens"),
+			streamTokenCount(e, "response.usage.input_tokens_details.cached_tokens"),
+		)
+	},
 	outputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "response.usage.output_tokens") },
 }
 
@@ -93,14 +106,20 @@ var anthropicStreamDecoder = monitorStreamDecoder{
 		return ""
 	},
 	// Anthropic 把用量拆在两个事件里：输入在 message_start，输出在 message_delta。
+	// 它的 input_tokens 本身就已排除缓存（另有 cache_read_input_tokens），不能再减。
 	inputTokens:  func(e gjson.Result) *int { return streamTokenCount(e, "message.usage.input_tokens") },
 	outputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usage.output_tokens") },
 }
 
 //nolint:gochecknoglobals // 只读静态数据。
 var geminiStreamDecoder = monitorStreamDecoder{
-	textDelta:   func(e gjson.Result) string { return e.Get("candidates.0.content.parts.0.text").String() },
-	inputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usageMetadata.promptTokenCount") },
+	textDelta: func(e gjson.Result) string { return e.Get("candidates.0.content.parts.0.text").String() },
+	inputTokens: func(e gjson.Result) *int {
+		return subtractCachedInput(
+			streamTokenCount(e, "usageMetadata.promptTokenCount"),
+			streamTokenCount(e, "usageMetadata.cachedContentTokenCount"),
+		)
+	},
 	// Gemini 每个 chunk 都带 usageMetadata，取最后一个即可（解析时后值覆盖前值）。
 	outputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usageMetadata.candidatesTokenCount") },
 }
@@ -170,6 +189,7 @@ func parseMonitorStream(
 	}
 
 	result.Text = text.String()
+
 	return result, raw.Bytes()
 }
 
