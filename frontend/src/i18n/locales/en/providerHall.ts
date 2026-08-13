@@ -45,7 +45,7 @@ export default {
       probeTtft: 'Probe first token',
       probeTotal: 'Probe end-to-end',
       userAvgTtft: 'User average first token',
-      tps: 'TPS (estimated)',
+      tps: 'TPS',
       inputBreakdown: 'Total - cached = billed input',
       ttftUnavailable: 'Showing probe end-to-end latency; first-token measurement is not enabled yet',
     },
