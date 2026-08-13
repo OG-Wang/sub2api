@@ -45,7 +45,7 @@ export default {
       probeTtft: '探测首 Token',
       probeTotal: '探测端到端',
       userAvgTtft: '用户平均首 Token',
-      tps: 'TPS（估算）',
+      tps: 'TPS',
       inputBreakdown: '总输入 - 缓存命中 = 计费输入',
       ttftUnavailable: '当前显示的是探测总耗时，首 Token 采集尚未启用',
     },
