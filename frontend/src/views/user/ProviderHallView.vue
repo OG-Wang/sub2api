@@ -186,6 +186,14 @@
         </template>
       </template>
     </TablePageLayout>
+
+    <HallCreateKeyDialog
+      :show="showCreateKey"
+      :group-id="createKeyTarget?.group_id ?? null"
+      :group-name="createKeyTarget?.group_name ?? ''"
+      @close="showCreateKey = false"
+      @created="showCreateKey = false"
+    />
   </AppLayout>
 </template>
 
@@ -198,7 +206,6 @@
  */
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import { isProviderHallEnabled } from '@/utils/featureFlags'
@@ -218,9 +225,9 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import HallLatencyCell from '@/components/user/hall/HallLatencyCell.vue'
 import HallSparkline, { type HallSparklineMetric } from '@/components/user/hall/HallSparkline.vue'
+import HallCreateKeyDialog from '@/components/user/hall/HallCreateKeyDialog.vue'
 
 const { t } = useI18n()
-const router = useRouter()
 const appStore = useAppStore()
 
 const PLATFORM_TABS: HallPlatformTab[] = ['openai', 'anthropic', 'other']
@@ -233,6 +240,8 @@ const generatedAt = ref('')
 const passiveAvailable = ref(true)
 const activeTab = ref<HallPlatformTab>('anthropic')
 const chartMetric = ref<HallSparklineMetric>('ttft')
+const showCreateKey = ref(false)
+const createKeyTarget = ref<HallRow | null>(null)
 
 // V2 支持的窗口就是这四个；规格里写的 6h 并不存在，用 90m 代替最短档。
 const range = ref<MonitorRange>('24h')
@@ -345,10 +354,11 @@ function switchTab(tab: HallPlatformTab) {
   void reload()
 }
 
-/** 跳到 API Key 页并自动打开创建弹窗、预选该分组。 */
+/** 就地弹出创建 API Key 的窗口，预选该行的分组。 */
 function useGroup(row: HallRow) {
   if (row.group_id == null) return
-  void router.push({ path: '/keys', query: { group_id: String(row.group_id), create: '1' } })
+  createKeyTarget.value = row
+  showCreateKey.value = true
 }
 
 async function reload() {
