@@ -62,8 +62,10 @@ type ProviderHallView struct {
 	OutputTokens      *int
 	// ExpectedInputTokens 本地算出的应计输入 token。
 	ExpectedInputTokens *int
-	// InputTokensInflated 上游报数明显超出真值。
-	InputTokensInflated bool
+	// InputTokensDeviated 上游报数与真值对不上（多报少报都算）。
+	InputTokensDeviated bool
+	// InputTokensExcess 相对真值的偏离量，正数为多报、负数为少报。
+	InputTokensExcess int
 
 	Timeline []UserMonitorTimelinePoint
 }
@@ -135,11 +137,12 @@ func buildProviderHallView(
 		view.OutputTokens = latest.OutputTokens
 	}
 
-	// 注水判定用的参考值：优先本地计算，管理员手填时以手填为准。
+	// 输入 token 比对用的参考值：优先本地计算，管理员手填时以手填为准。
 	// 这里只能用 PrimaryModel 重算 prompt，与探测时一致。
 	ref := monitorExpectedInputTokens(row.Provider, row.APIMode, row.PrimaryModel, monitorChallengeReferencePrompt())
 	if verdict := evaluateMonitorInputTokens(ref, view.InputTokens, row.ExpectedInputTokens); verdict != nil {
-		view.InputTokensInflated = verdict.Inflated
+		view.InputTokensDeviated = verdict.Deviated
+		view.InputTokensExcess = verdict.ExcessTokens
 		if view.ExpectedInputTokens == nil {
 			expected := verdict.Reference.Expected
 			view.ExpectedInputTokens = &expected

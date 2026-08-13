@@ -118,7 +118,14 @@ type monitorInputTokenVerdict struct {
 	Actual int
 	// Inflated 上游报数明显超出参考值，说明请求里被塞了额外内容。
 	Inflated bool
-	// ExcessTokens 超出参考值的 token 数，Inflated 为 true 时才有意义。
+	// Deviated 上游报数与参考值对不上，多报少报都算。
+	//
+	// 与 Inflated 的分工：Inflated 是「注水」这个欺诈信号，只看多报方向，
+	// 用于写检测记录告警；Deviated 只陈述「对不上」这个事实，
+	// 供应商大厅用它给数字打标注——少报同样说明上游动过请求
+	// （截断 prompt、换了模板），用户有权看见。
+	Deviated bool
+	// ExcessTokens 相对参考值的偏离量，正数为多报、负数为少报。
 	ExcessTokens int
 }
 
@@ -134,8 +141,9 @@ type monitorInputTokenVerdict struct {
 // 每个这类渠道都误标成注水，指标一旦不可信就等于没有。
 // 这些 provider 只采集展示，要判定就由管理员显式设基线。
 //
-// 只判「超出」方向：注入内容只会让输入变多。低于参考值可能是上游做了
-// 缓存或压缩，不是欺诈信号。
+// Inflated 只判「超出」方向：注入内容只会让输入变多。低于参考值可能是上游做了
+// 缓存或压缩，不是欺诈信号，所以不进告警。Deviated 则两个方向都算——
+// 「对不上」这个事实本身值得摆给用户看，判断留给他自己。
 //
 // 能力边界：只能抓「注入 system prompt / 虚报输入用量」。
 // 上游虚报 output token、私调倍率、降智换小模型都抓不到。
@@ -171,6 +179,7 @@ func evaluateMonitorInputTokens(ref monitorTokenReference, actual, override *int
 		Reference:    effective,
 		Actual:       *actual,
 		Inflated:     excess > tolerance,
+		Deviated:     excess > tolerance || excess < -tolerance,
 		ExcessTokens: excess,
 	}
 }
