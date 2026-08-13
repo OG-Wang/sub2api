@@ -14,6 +14,16 @@ import (
 type monitorUsagePaths struct {
 	inputTokens  string
 	outputTokens string
+	// cachedInputTokens 缓存命中的输入 token path。
+	//
+	// 各家语义不同，这是最容易踩的坑：
+	//   - OpenAI / Grok / Gemini 的输入字段是「含缓存的总输入」，要减掉这一项
+	//     才是本次真正新提交的内容；
+	//   - Anthropic 的 input_tokens 本身就已经排除缓存，另有独立的
+	//     cache_read_input_tokens 字段，再减一次会算成负数。
+	//
+	// 空串表示该 provider 无需扣减。
+	cachedInputTokens string
 }
 
 // monitorUsagePathTable 各 provider 非流式响应的用量字段位置。
@@ -22,20 +32,24 @@ type monitorUsagePaths struct {
 //nolint:gochecknoglobals // 只读静态表，初始化后不变更。
 var monitorUsagePathTable = map[string]monitorUsagePaths{
 	MonitorProviderOpenAI: {
-		inputTokens:  "usage.prompt_tokens",
-		outputTokens: "usage.completion_tokens",
+		inputTokens:       "usage.prompt_tokens",
+		outputTokens:      "usage.completion_tokens",
+		cachedInputTokens: "usage.prompt_tokens_details.cached_tokens",
 	},
 	MonitorProviderGrok: {
-		inputTokens:  "usage.prompt_tokens",
-		outputTokens: "usage.completion_tokens",
+		inputTokens:       "usage.prompt_tokens",
+		outputTokens:      "usage.completion_tokens",
+		cachedInputTokens: "usage.prompt_tokens_details.cached_tokens",
 	},
 	MonitorProviderAnthropic: {
+		// input_tokens 已排除缓存，不能再减。
 		inputTokens:  "usage.input_tokens",
 		outputTokens: "usage.output_tokens",
 	},
 	MonitorProviderGemini: {
-		inputTokens:  "usageMetadata.promptTokenCount",
-		outputTokens: "usageMetadata.candidatesTokenCount",
+		inputTokens:       "usageMetadata.promptTokenCount",
+		outputTokens:      "usageMetadata.candidatesTokenCount",
+		cachedInputTokens: "usageMetadata.cachedContentTokenCount",
 	},
 }
 
@@ -44,8 +58,9 @@ var monitorUsagePathTable = map[string]monitorUsagePaths{
 //
 //nolint:gochecknoglobals // 只读静态数据。
 var monitorOpenAIResponsesUsagePaths = monitorUsagePaths{
-	inputTokens:  "usage.input_tokens",
-	outputTokens: "usage.output_tokens",
+	inputTokens:       "usage.input_tokens",
+	outputTokens:      "usage.output_tokens",
+	cachedInputTokens: "usage.input_tokens_details.cached_tokens",
 }
 
 // monitorUsagePathsFor 按 provider + api_mode 选择用量 path。
@@ -58,6 +73,11 @@ func monitorUsagePathsFor(provider, apiMode string) (monitorUsagePaths, bool) {
 }
 
 // extractMonitorUsage 从成功响应体里取输入/输出 token 数。
+//
+// 输入返回的是**净输入**：扣掉缓存命中的部分，与网关用量记录里的 input 口径一致。
+// 不扣的话拿到的是「含缓存的总输入」，会比实际提交的内容大出一截，
+// 注水检测会因此全线误报。
+//
 // 字段缺失、非数字或为负都返回 nil —— 上游没报用量不是错误，
 // 只是这次探测拿不到这个指标。
 func extractMonitorUsage(provider, apiMode, rawBody string) (inputTokens, outputTokens *int) {
@@ -68,8 +88,25 @@ func extractMonitorUsage(provider, apiMode, rawBody string) (inputTokens, output
 	if !ok {
 		return nil, nil
 	}
-	return extractMonitorTokenCount(rawBody, paths.inputTokens),
-		extractMonitorTokenCount(rawBody, paths.outputTokens)
+	input := extractMonitorTokenCount(rawBody, paths.inputTokens)
+	cached := extractMonitorTokenCount(rawBody, paths.cachedInputTokens)
+	return subtractCachedInput(input, cached), extractMonitorTokenCount(rawBody, paths.outputTokens)
+}
+
+// subtractCachedInput 从总输入里扣掉缓存命中部分。
+//
+// cached 为 nil（该 provider 无需扣减，或上游没报缓存）时原样返回。
+// 结果为负时返回 0 而不是负数：负数只可能是上游字段语义与预期不符，
+// 与其把一个不可能的值写进库，不如落成 0 让异常显形。
+func subtractCachedInput(input, cached *int) *int {
+	if input == nil || cached == nil {
+		return input
+	}
+	net := *input - *cached
+	if net < 0 {
+		net = 0
+	}
+	return &net
 }
 
 // extractMonitorTokenCount 读单个 token 计数。
