@@ -52,6 +52,9 @@ export default {
       inputBreakdown: 'Total - cached = billed input',
       ttftUnavailable: 'Showing probe end-to-end latency; first-token measurement is not enabled yet',
     },
+    chart: {
+      samples: 'averaged over {count} requests',
+    },
     useGroupDialog: {
       title: 'Use group: {group}',
       rate: 'Rate {rate}',
