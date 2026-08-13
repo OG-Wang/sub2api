@@ -52,6 +52,9 @@ export default {
       inputBreakdown: '总输入 - 缓存命中 = 计费输入',
       ttftUnavailable: '当前显示的是探测总耗时，首 Token 采集尚未启用',
     },
+    chart: {
+      samples: '{count} 条请求平均',
+    },
     useGroupDialog: {
       title: '使用分组：{group}',
       rate: '倍率 {rate}',
