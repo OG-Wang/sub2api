@@ -60,7 +60,8 @@ type providerHallItem struct {
 	CachedInputTokens   *int `json:"cached_input_tokens"`
 	OutputTokens        *int `json:"output_tokens"`
 	ExpectedInputTokens *int `json:"expected_input_tokens"`
-	InputTokensInflated bool `json:"input_tokens_inflated"`
+	InputTokensDeviated bool `json:"input_tokens_deviated"`
+	InputTokensExcess   int  `json:"input_tokens_excess"`
 }
 
 type providerHallExtraModelStatus struct {
@@ -134,7 +135,8 @@ func providerHallViewToItem(v *service.ProviderHallView) providerHallItem {
 		CachedInputTokens:   v.CachedInputTokens,
 		OutputTokens:        v.OutputTokens,
 		ExpectedInputTokens: v.ExpectedInputTokens,
-		InputTokensInflated: v.InputTokensInflated,
+		InputTokensDeviated: v.InputTokensDeviated,
+		InputTokensExcess:   v.InputTokensExcess,
 	}
 	if v.LastCheckedAt != nil {
 		s := v.LastCheckedAt.UTC().Format(time.RFC3339)
