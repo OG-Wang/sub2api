@@ -1,15 +1,12 @@
 export default {
   providerHall: {
-    title: '供应商大厅',
     description: '对比各分组的延迟、可用率与缓存命中率，挑选合适的分组创建 API Key',
     generatedAt: '数据生成于 {time}',
     window: '时间窗口',
-    loadError: '加载供应商大厅失败',
-    disabledTitle: '供应商大厅未启用',
-    disabledHint: '该页面需要渠道监控运行在「V1 + V2 并存」模式下：既要主动探测数据，也要真实用户指标。请联系管理员在系统设置中切换。',
+    loadError: '加载渠道状态失败',
     passiveUnavailable: '暂时取不到用户实际用量指标，缓存命中率与可用率已回退为主动探测数据。',
     emptyTitle: '该平台暂无可展示的渠道',
-    emptyHint: '管理员需要在「渠道管理 - 渠道监控」中勾选「在供应商大厅展示」，对应渠道才会出现在这里。',
+    emptyHint: '管理员需要在「渠道管理 - 渠道监控」中勾选「在渠道状态页展示」，对应渠道才会出现在这里。',
     tabs: {
       openai: 'OpenAI',
       anthropic: 'Anthropic',
