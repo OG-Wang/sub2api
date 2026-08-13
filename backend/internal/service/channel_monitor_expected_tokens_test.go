@@ -67,19 +67,24 @@ func TestEvaluateMonitorInputTokens(t *testing.T) {
 		override     *int
 		wantVerdict  bool
 		wantInflated bool
+		wantDeviated bool
 	}{
-		{"上游没报用量则不下结论", exactRef, nil, nil, false, false},
-		{"精确匹配", exactRef, ptr(57), nil, true, false},
-		{"精确参考下 2 token 内的偏差不算注水", exactRef, ptr(59), nil, true, false},
-		{"精确参考下超出容差即判定", exactRef, ptr(60), nil, true, true},
-		{"注入 system prompt", exactRef, ptr(420), nil, true, true},
-		{"低于参考值不是注水", exactRef, ptr(40), nil, true, false},
+		{"上游没报用量则不下结论", exactRef, nil, nil, false, false, false},
+		{"精确匹配", exactRef, ptr(57), nil, true, false, false},
+		{"精确参考下 2 token 内的偏差不算注水", exactRef, ptr(59), nil, true, false, false},
+		{"精确参考下超出容差即判定", exactRef, ptr(60), nil, true, true, true},
+		{"注入 system prompt", exactRef, ptr(420), nil, true, true, true},
+		// 少报不是注水（不进告警），但确实和真值对不上，大厅要标出来。
+		{"低于参考值不是注水但算偏离", exactRef, ptr(40), nil, true, false, true},
+		{"少报但在容差内不算偏离", exactRef, ptr(55), nil, true, false, false},
 		// 本地只有 OpenAI 系 tokenizer，对其他 provider 算出来的数只是量级参考。
 		// 拿它判定会把每个这类渠道都误标成注水，所以一律不下结论。
-		{"参考值不精确时不下结论", fuzzyRef, ptr(74), nil, false, false},
-		{"参考值不精确时即使偏差很大也不下结论", fuzzyRef, ptr(500), nil, false, false},
-		{"手填基线覆盖本地计算", fuzzyRef, ptr(300), ptr(295), true, false},
-		{"手填基线下的注水", fuzzyRef, ptr(300), ptr(80), true, true},
+		{"参考值不精确时不下结论", fuzzyRef, ptr(74), nil, false, false, false},
+		{"参考值不精确时即使偏差很大也不下结论", fuzzyRef, ptr(500), nil, false, false, false},
+		{"手填基线覆盖本地计算", fuzzyRef, ptr(300), ptr(295), true, false, false},
+		{"手填基线下的注水", fuzzyRef, ptr(300), ptr(80), true, true, true},
+		// 手填基线走宽容差，少报 20 还在容差里，不该报偏离。
+		{"手填基线下的小幅少报不算偏离", fuzzyRef, ptr(280), ptr(300), true, false, false},
 	}
 
 	for _, tc := range cases {
@@ -94,6 +99,10 @@ func TestEvaluateMonitorInputTokens(t *testing.T) {
 			if v.Inflated != tc.wantInflated {
 				t.Errorf("Inflated = %v, want %v (actual=%d expected=%d excess=%d)",
 					v.Inflated, tc.wantInflated, v.Actual, v.Reference.Expected, v.ExcessTokens)
+			}
+			if v.Deviated != tc.wantDeviated {
+				t.Errorf("Deviated = %v, want %v (actual=%d expected=%d excess=%d)",
+					v.Deviated, tc.wantDeviated, v.Actual, v.Reference.Expected, v.ExcessTokens)
 			}
 		})
 	}
