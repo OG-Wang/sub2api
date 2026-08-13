@@ -1,68 +1,82 @@
 <template>
-  <TablePageLayout
-    :title="t('providerHall.title')"
-    :description="t('providerHall.description')"
-  >
-    <template #actions>
-      <div class="flex flex-wrap items-center gap-2">
-        <span v-if="generatedAt" class="text-xs text-gray-400 dark:text-dark-500">
-          {{ t('providerHall.generatedAt', { time: formattedGeneratedAt }) }}
-        </span>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          :disabled="loading"
-          @click="reload"
-        >
-          {{ t('common.refresh') }}
-        </button>
-      </div>
-    </template>
+  <AppLayout>
+    <TablePageLayout>
+      <template #actions>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
+              {{ t('providerHall.title') }}
+            </h1>
+            <p class="mt-0.5 text-sm text-gray-500 dark:text-dark-400">
+              {{ t('providerHall.description') }}
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span v-if="generatedAt" class="text-xs text-gray-400 dark:text-dark-500">
+              {{ t('providerHall.generatedAt', { time: formattedGeneratedAt }) }}
+            </span>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              :disabled="loading"
+              @click="reload"
+            >
+              {{ t('common.refresh') }}
+            </button>
+          </div>
+        </div>
+      </template>
 
-    <div v-if="!hallEnabled" class="card p-8">
-      <EmptyState :title="t('providerHall.disabledTitle')" :description="t('providerHall.disabledHint')" />
-    </div>
+      <template v-if="hallEnabled" #filters>
+        <!-- 平台分页签 + 时间窗口 -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-dark-600 dark:bg-dark-900/40">
+            <button
+              v-for="tab in PLATFORM_TABS"
+              :key="tab"
+              type="button"
+              class="rounded-md px-4 py-1.5 text-sm font-medium transition"
+              :class="
+                activeTab === tab
+                  ? 'bg-white text-primary-700 shadow-sm dark:bg-dark-800 dark:text-primary-300'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-dark-300 dark:hover:text-white'
+              "
+              @click="switchTab(tab)"
+            >
+              {{ t(`providerHall.tabs.${tab}`) }}
+            </button>
+          </div>
 
-    <template v-else>
-      <!-- 平台分页签 + 时间窗口 -->
-      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-dark-600 dark:bg-dark-900/40">
-          <button
-            v-for="tab in PLATFORM_TABS"
-            :key="tab"
-            type="button"
-            class="rounded-md px-4 py-1.5 text-sm font-medium transition"
-            :class="
-              activeTab === tab
-                ? 'bg-white text-primary-700 shadow-sm dark:bg-dark-800 dark:text-primary-300'
-                : 'text-gray-600 hover:text-gray-900 dark:text-dark-300 dark:hover:text-white'
-            "
-            @click="switchTab(tab)"
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 dark:text-dark-400">
+              {{ t('providerHall.window') }}
+            </span>
+            <Select v-model="range" :options="rangeOptions" class="w-32" @update:model-value="reload" />
+          </div>
+        </div>
+      </template>
+
+      <template #table>
+        <div v-if="!hallEnabled" class="p-8">
+          <EmptyState
+            :title="t('providerHall.disabledTitle')"
+            :description="t('providerHall.disabledHint')"
+          />
+        </div>
+
+        <template v-else>
+          <p v-if="!passiveAvailable" class="px-4 pt-3 text-xs text-amber-600 dark:text-amber-400">
+            {{ t('providerHall.passiveUnavailable') }}
+          </p>
+
+          <DataTable
+            :columns="columns"
+            :data="visibleRows"
+            :loading="loading"
+            row-key="id"
+            default-sort-key="availability"
+            default-sort-order="desc"
           >
-            {{ t(`providerHall.tabs.${tab}`) }}
-          </button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-500 dark:text-dark-400">
-            {{ t('providerHall.window') }}
-          </span>
-          <Select v-model="range" :options="rangeOptions" class="w-32" @update:model-value="reload" />
-        </div>
-      </div>
-
-      <p v-if="!passiveAvailable" class="mb-3 text-xs text-amber-600 dark:text-amber-400">
-        {{ t('providerHall.passiveUnavailable') }}
-      </p>
-
-      <DataTable
-        :columns="columns"
-        :data="visibleRows"
-        :loading="loading"
-        row-key="id"
-        default-sort-key="availability"
-        default-sort-order="desc"
-      >
         <!-- 分组 -->
         <template #cell-group="{ row }">
           <div class="flex flex-col gap-0.5">
@@ -162,15 +176,17 @@
           </div>
         </template>
 
-        <template #empty>
-          <EmptyState
-            :title="t('providerHall.emptyTitle')"
-            :description="t('providerHall.emptyHint')"
-          />
+            <template #empty>
+              <EmptyState
+                :title="t('providerHall.emptyTitle')"
+                :description="t('providerHall.emptyHint')"
+              />
+            </template>
+          </DataTable>
         </template>
-      </DataTable>
-    </template>
-  </TablePageLayout>
+      </template>
+    </TablePageLayout>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
@@ -195,7 +211,8 @@ import {
 } from '@/api/providerHall'
 import type { MonitorRange } from '@/api/channelMonitorV2'
 import type { Column } from '@/components/common/types'
-import TablePageLayout from '@/components/common/TablePageLayout.vue'
+import AppLayout from '@/components/layout/AppLayout.vue'
+import TablePageLayout from '@/components/layout/TablePageLayout.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
