@@ -55,8 +55,11 @@ type ProviderHallView struct {
 
 	// 最近一次探测的指标。
 	PrimaryTTFTMs *int
-	InputTokens   *int
-	OutputTokens  *int
+	// InputTokens 上游报告的总输入（含缓存命中）；CachedInputTokens 是其中的缓存部分。
+	// 两者相减即网关用量记录里的 input 口径。
+	InputTokens       *int
+	CachedInputTokens *int
+	OutputTokens      *int
 	// ExpectedInputTokens 本地算出的应计输入 token。
 	ExpectedInputTokens *int
 	// InputTokensInflated 上游报数明显超出真值。
@@ -128,6 +131,7 @@ func buildProviderHallView(
 	if latest != nil {
 		view.PrimaryTTFTMs = latest.TTFTMs
 		view.InputTokens = latest.InputTokens
+		view.CachedInputTokens = latest.CachedInputTokens
 		view.OutputTokens = latest.OutputTokens
 	}
 
@@ -148,13 +152,14 @@ func buildHallTimeline(entries []*ChannelMonitorHistoryEntry) []UserMonitorTimel
 	points := make([]UserMonitorTimelinePoint, 0, len(entries))
 	for _, e := range entries {
 		points = append(points, UserMonitorTimelinePoint{
-			Status:        e.Status,
-			LatencyMs:     e.LatencyMs,
-			PingLatencyMs: e.PingLatencyMs,
-			CheckedAt:     e.CheckedAt,
-			TTFTMs:        e.TTFTMs,
-			InputTokens:   e.InputTokens,
-			OutputTokens:  e.OutputTokens,
+			Status:            e.Status,
+			LatencyMs:         e.LatencyMs,
+			PingLatencyMs:     e.PingLatencyMs,
+			CheckedAt:         e.CheckedAt,
+			TTFTMs:            e.TTFTMs,
+			InputTokens:       e.InputTokens,
+			CachedInputTokens: e.CachedInputTokens,
+			OutputTokens:      e.OutputTokens,
 		})
 	}
 	return points

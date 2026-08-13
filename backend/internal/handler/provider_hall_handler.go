@@ -54,8 +54,10 @@ type providerHallItem struct {
 	LastCheckedAt    *string                            `json:"last_checked_at"`
 	Timeline         []service.UserMonitorTimelinePoint `json:"timeline"`
 
-	PrimaryTTFTMs       *int `json:"primary_ttft_ms"`
+	PrimaryTTFTMs *int `json:"primary_ttft_ms"`
+	// InputTokens 含缓存命中的总输入；减去 CachedInputTokens 即计费口径的净输入。
 	InputTokens         *int `json:"input_tokens"`
+	CachedInputTokens   *int `json:"cached_input_tokens"`
 	OutputTokens        *int `json:"output_tokens"`
 	ExpectedInputTokens *int `json:"expected_input_tokens"`
 	InputTokensInflated bool `json:"input_tokens_inflated"`
@@ -129,6 +131,7 @@ func providerHallViewToItem(v *service.ProviderHallView) providerHallItem {
 		Timeline:            timeline,
 		PrimaryTTFTMs:       v.PrimaryTTFTMs,
 		InputTokens:         v.InputTokens,
+		CachedInputTokens:   v.CachedInputTokens,
 		OutputTokens:        v.OutputTokens,
 		ExpectedInputTokens: v.ExpectedInputTokens,
 		InputTokensInflated: v.InputTokensInflated,

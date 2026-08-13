@@ -35,7 +35,7 @@
  */
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { computeTps, type HallRow } from '@/api/providerHall'
+import { computeTps, netInputTokens, type HallRow } from '@/api/providerHall'
 import HelpTooltip from '@/components/common/HelpTooltip.vue'
 
 const props = defineProps<{ row: HallRow }>()
@@ -61,6 +61,11 @@ const tps = computed(() =>
   computeTps(props.row.output_tokens, probeLatency.value, probeTtft.value),
 )
 
+/** 净输入：扣掉缓存命中，与网关用量记录的 input 口径一致。 */
+const netInput = computed(() =>
+  netInputTokens(props.row.input_tokens, props.row.cached_input_tokens),
+)
+
 const hasAnyDetail = computed(
   () => probeLatency.value != null || userAvgTtft.value != null || tps.value != null,
 )
@@ -82,6 +87,14 @@ const tooltipText = computed(() => {
   }
   if (tps.value != null) {
     lines.push(`${t('providerHall.tooltip.tps')}: ${tps.value.toFixed(1)}`)
+  }
+  // ↑ 显示的是含缓存的总输入，和用量记录里的 input 对不上。
+  // 把换算摊开写清楚，省得再去猜差额哪来的。
+  if (props.row.cached_input_tokens != null && props.row.input_tokens != null) {
+    lines.push(
+      `${t('providerHall.tooltip.inputBreakdown')}: ` +
+        `${props.row.input_tokens} - ${props.row.cached_input_tokens} = ${netInput.value}`,
+    )
   }
   return lines.join('\n')
 })

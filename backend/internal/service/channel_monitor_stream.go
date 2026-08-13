@@ -30,9 +30,10 @@ type monitorStreamResult struct {
 	TTFTMs *int
 	// Text 拼接后的完整回答文本，用于 challenge 校验。
 	Text string
-	// InputTokens / OutputTokens 上游在流中报告的用量。
-	InputTokens  *int
-	OutputTokens *int
+	// InputTokens 上游报告的总输入（含缓存命中）；CachedInputTokens 是其中的缓存部分。
+	InputTokens       *int
+	CachedInputTokens *int
+	OutputTokens      *int
 }
 
 // monitorStreamDecoder 描述某个 provider 的 SSE 事件如何解读。
@@ -43,6 +44,9 @@ type monitorStreamDecoder struct {
 	// inputTokens / outputTokens 取该事件携带的用量（可能出现在不同事件里）。
 	inputTokens  func(event gjson.Result) *int
 	outputTokens func(event gjson.Result) *int
+	// cachedInputTokens 取 inputTokens 里命中缓存的部分。
+	// Anthropic 的 input_tokens 本身已排除缓存，该字段留空。
+	cachedInputTokens func(event gjson.Result) *int
 }
 
 // monitorStreamDecoderFor 按 provider + api_mode 选择解码器。
@@ -69,15 +73,10 @@ var openAIChatStreamDecoder = monitorStreamDecoder{
 	// OpenAI Chat 的用量只在最后一个 chunk 里，且必须请求时带
 	// stream_options.include_usage=true，否则根本不返回（见 buildBody）。
 	//
-	// prompt_tokens 含缓存命中，要减掉 cached_tokens 才是本次真正提交的内容，
-	// 与网关用量记录的 input 口径一致。
-	inputTokens: func(e gjson.Result) *int {
-		return subtractCachedInput(
-			streamTokenCount(e, "usage.prompt_tokens"),
-			streamTokenCount(e, "usage.prompt_tokens_details.cached_tokens"),
-		)
-	},
-	outputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usage.completion_tokens") },
+	// prompt_tokens 是含缓存命中的总输入，缓存量单独取，不在这里扣减（见 extractMonitorUsage）。
+	inputTokens:       func(e gjson.Result) *int { return streamTokenCount(e, "usage.prompt_tokens") },
+	cachedInputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usage.prompt_tokens_details.cached_tokens") },
+	outputTokens:      func(e gjson.Result) *int { return streamTokenCount(e, "usage.completion_tokens") },
 }
 
 //nolint:gochecknoglobals // 只读静态数据。
@@ -88,11 +87,9 @@ var openAIResponsesStreamDecoder = monitorStreamDecoder{
 		}
 		return ""
 	},
-	inputTokens: func(e gjson.Result) *int {
-		return subtractCachedInput(
-			streamTokenCount(e, "response.usage.input_tokens"),
-			streamTokenCount(e, "response.usage.input_tokens_details.cached_tokens"),
-		)
+	inputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "response.usage.input_tokens") },
+	cachedInputTokens: func(e gjson.Result) *int {
+		return streamTokenCount(e, "response.usage.input_tokens_details.cached_tokens")
 	},
 	outputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "response.usage.output_tokens") },
 }
@@ -113,13 +110,9 @@ var anthropicStreamDecoder = monitorStreamDecoder{
 
 //nolint:gochecknoglobals // 只读静态数据。
 var geminiStreamDecoder = monitorStreamDecoder{
-	textDelta: func(e gjson.Result) string { return e.Get("candidates.0.content.parts.0.text").String() },
-	inputTokens: func(e gjson.Result) *int {
-		return subtractCachedInput(
-			streamTokenCount(e, "usageMetadata.promptTokenCount"),
-			streamTokenCount(e, "usageMetadata.cachedContentTokenCount"),
-		)
-	},
+	textDelta:         func(e gjson.Result) string { return e.Get("candidates.0.content.parts.0.text").String() },
+	inputTokens:       func(e gjson.Result) *int { return streamTokenCount(e, "usageMetadata.promptTokenCount") },
+	cachedInputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usageMetadata.cachedContentTokenCount") },
 	// Gemini 每个 chunk 都带 usageMetadata，取最后一个即可（解析时后值覆盖前值）。
 	outputTokens: func(e gjson.Result) *int { return streamTokenCount(e, "usageMetadata.candidatesTokenCount") },
 }
@@ -182,6 +175,11 @@ func parseMonitorStream(
 		}
 		if v := decoder.inputTokens(event); v != nil {
 			result.InputTokens = v
+		}
+		if decoder.cachedInputTokens != nil {
+			if v := decoder.cachedInputTokens(event); v != nil {
+				result.CachedInputTokens = v
+			}
 		}
 		if v := decoder.outputTokens(event); v != nil {
 			result.OutputTokens = v
