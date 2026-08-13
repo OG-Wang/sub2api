@@ -132,6 +132,20 @@ func (_c *ChannelMonitorHistoryCreate) SetNillableInputTokens(v *int) *ChannelMo
 	return _c
 }
 
+// SetCachedInputTokens sets the "cached_input_tokens" field.
+func (_c *ChannelMonitorHistoryCreate) SetCachedInputTokens(v int) *ChannelMonitorHistoryCreate {
+	_c.mutation.SetCachedInputTokens(v)
+	return _c
+}
+
+// SetNillableCachedInputTokens sets the "cached_input_tokens" field if the given value is not nil.
+func (_c *ChannelMonitorHistoryCreate) SetNillableCachedInputTokens(v *int) *ChannelMonitorHistoryCreate {
+	if v != nil {
+		_c.SetCachedInputTokens(*v)
+	}
+	return _c
+}
+
 // SetOutputTokens sets the "output_tokens" field.
 func (_c *ChannelMonitorHistoryCreate) SetOutputTokens(v int) *ChannelMonitorHistoryCreate {
 	_c.mutation.SetOutputTokens(v)
@@ -290,6 +304,10 @@ func (_c *ChannelMonitorHistoryCreate) createSpec() (*ChannelMonitorHistory, *sq
 	if value, ok := _c.mutation.InputTokens(); ok {
 		_spec.SetField(channelmonitorhistory.FieldInputTokens, field.TypeInt, value)
 		_node.InputTokens = &value
+	}
+	if value, ok := _c.mutation.CachedInputTokens(); ok {
+		_spec.SetField(channelmonitorhistory.FieldCachedInputTokens, field.TypeInt, value)
+		_node.CachedInputTokens = &value
 	}
 	if value, ok := _c.mutation.OutputTokens(); ok {
 		_spec.SetField(channelmonitorhistory.FieldOutputTokens, field.TypeInt, value)
@@ -541,6 +559,30 @@ func (u *ChannelMonitorHistoryUpsert) AddInputTokens(v int) *ChannelMonitorHisto
 // ClearInputTokens clears the value of the "input_tokens" field.
 func (u *ChannelMonitorHistoryUpsert) ClearInputTokens() *ChannelMonitorHistoryUpsert {
 	u.SetNull(channelmonitorhistory.FieldInputTokens)
+	return u
+}
+
+// SetCachedInputTokens sets the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) SetCachedInputTokens(v int) *ChannelMonitorHistoryUpsert {
+	u.Set(channelmonitorhistory.FieldCachedInputTokens, v)
+	return u
+}
+
+// UpdateCachedInputTokens sets the "cached_input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsert) UpdateCachedInputTokens() *ChannelMonitorHistoryUpsert {
+	u.SetExcluded(channelmonitorhistory.FieldCachedInputTokens)
+	return u
+}
+
+// AddCachedInputTokens adds v to the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) AddCachedInputTokens(v int) *ChannelMonitorHistoryUpsert {
+	u.Add(channelmonitorhistory.FieldCachedInputTokens, v)
+	return u
+}
+
+// ClearCachedInputTokens clears the value of the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsert) ClearCachedInputTokens() *ChannelMonitorHistoryUpsert {
+	u.SetNull(channelmonitorhistory.FieldCachedInputTokens)
 	return u
 }
 
@@ -815,6 +857,34 @@ func (u *ChannelMonitorHistoryUpsertOne) UpdateInputTokens() *ChannelMonitorHist
 func (u *ChannelMonitorHistoryUpsertOne) ClearInputTokens() *ChannelMonitorHistoryUpsertOne {
 	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
 		s.ClearInputTokens()
+	})
+}
+
+// SetCachedInputTokens sets the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) SetCachedInputTokens(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetCachedInputTokens(v)
+	})
+}
+
+// AddCachedInputTokens adds v to the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) AddCachedInputTokens(v int) *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddCachedInputTokens(v)
+	})
+}
+
+// UpdateCachedInputTokens sets the "cached_input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertOne) UpdateCachedInputTokens() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateCachedInputTokens()
+	})
+}
+
+// ClearCachedInputTokens clears the value of the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertOne) ClearCachedInputTokens() *ChannelMonitorHistoryUpsertOne {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearCachedInputTokens()
 	})
 }
 
@@ -1257,6 +1327,34 @@ func (u *ChannelMonitorHistoryUpsertBulk) UpdateInputTokens() *ChannelMonitorHis
 func (u *ChannelMonitorHistoryUpsertBulk) ClearInputTokens() *ChannelMonitorHistoryUpsertBulk {
 	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
 		s.ClearInputTokens()
+	})
+}
+
+// SetCachedInputTokens sets the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) SetCachedInputTokens(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.SetCachedInputTokens(v)
+	})
+}
+
+// AddCachedInputTokens adds v to the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) AddCachedInputTokens(v int) *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.AddCachedInputTokens(v)
+	})
+}
+
+// UpdateCachedInputTokens sets the "cached_input_tokens" field to the value that was provided on create.
+func (u *ChannelMonitorHistoryUpsertBulk) UpdateCachedInputTokens() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.UpdateCachedInputTokens()
+	})
+}
+
+// ClearCachedInputTokens clears the value of the "cached_input_tokens" field.
+func (u *ChannelMonitorHistoryUpsertBulk) ClearCachedInputTokens() *ChannelMonitorHistoryUpsertBulk {
+	return u.Update(func(s *ChannelMonitorHistoryUpsert) {
+		s.ClearCachedInputTokens()
 	})
 }
 
