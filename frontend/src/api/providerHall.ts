@@ -20,6 +20,7 @@ export interface HallTimelinePoint {
   checked_at: string
   ttft_ms: number | null
   input_tokens: number | null
+  cached_input_tokens: number | null
   output_tokens: number | null
 }
 
@@ -47,7 +48,10 @@ export interface HallMonitorItem {
   last_checked_at: string | null
   timeline: HallTimelinePoint[]
   primary_ttft_ms: number | null
+  /** 上游报告的总输入，含缓存命中 */
   input_tokens: number | null
+  /** 总输入里命中缓存的部分；总输入减去它 = 网关用量记录的 input */
+  cached_input_tokens: number | null
   output_tokens: number | null
   expected_input_tokens: number | null
   input_tokens_inflated: boolean
@@ -152,6 +156,19 @@ function buildRateMap(
     map.set(Number(groupId), rate)
   }
   return map
+}
+
+/**
+ * 净输入 = 总输入 - 缓存命中，即网关用量记录里的 input 口径。
+ * 缺任一项时返回 null，不猜。
+ */
+export function netInputTokens(
+  inputTokens: number | null,
+  cachedInputTokens: number | null,
+): number | null {
+  if (inputTokens == null) return null
+  if (cachedInputTokens == null) return inputTokens
+  return Math.max(0, inputTokens - cachedInputTokens)
 }
 
 /**
