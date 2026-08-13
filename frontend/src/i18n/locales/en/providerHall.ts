@@ -86,8 +86,7 @@ export default {
     useGroup: 'Use this group',
     noGroupLinked: 'This monitor is not linked to a real group, so an API key cannot be created directly',
     report: 'Report',
-    inflated: 'Possibly inflated',
-    inflatedHint: 'The upstream reported noticeably more input tokens than this request should use',
-    inflatedDetail: 'Upstream reported {actual} input tokens; locally computed value is around {expected}, so extra content may have been injected',
+    expectedInput: 'Expected prompt input tokens: {expected}',
+    expectedInputTotal: 'Upstream reported {actual} total input tokens ({cached} served from cache)',
   },
 }

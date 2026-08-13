@@ -54,7 +54,10 @@ export interface HallMonitorItem {
   cached_input_tokens: number | null
   output_tokens: number | null
   expected_input_tokens: number | null
-  input_tokens_inflated: boolean
+  /** 上游报的输入 token 与本地算出的真值对不上（多报少报都算）。 */
+  input_tokens_deviated: boolean
+  /** 相对真值的偏离量，正数为多报、负数为少报。 */
+  input_tokens_excess: number
 }
 
 export interface HallMonitorResponse {

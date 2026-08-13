@@ -5,14 +5,11 @@
       <span class="font-medium tabular-nums text-gray-900 dark:text-white">
         {{ primaryDisplay }}
       </span>
-      <HelpTooltip v-if="hasAnyDetail" :content="tooltipText" />
-      <span
-        v-if="row.input_tokens_inflated"
-        class="inline-flex items-center rounded px-1 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-300 dark:text-amber-300 dark:ring-amber-600"
-        :title="inflationTitle"
-      >
-        {{ t('providerHall.inflated') }}
-      </span>
+      <HelpTooltip v-if="detailLines.length" width-class="w-72">
+        <div v-for="(line, i) in detailLines" :key="i" :class="i > 0 ? 'mt-1' : ''">
+          {{ line }}
+        </div>
+      </HelpTooltip>
     </div>
 
     <!-- ↑输入 ↓输出 -->
@@ -20,7 +17,29 @@
       v-if="netInput != null || row.output_tokens != null"
       class="flex items-center gap-2 text-[11px] tabular-nums text-gray-500 dark:text-dark-400"
     >
-      <span v-if="netInput != null">↑{{ netInput }}</span>
+      <!--
+        输入 token 与真值对不上时直接标在数字上（多报=橙，少报=红），
+        旁边一个「i」说明应该是多少——比单独挂一个「疑似注水」标签更直接：
+        看到的就是那个对不上的数，不用再猜说的是哪一项。
+      -->
+      <span v-if="netInput != null" class="inline-flex items-center gap-[3px]" :class="deviationClass">
+        ↑{{ netInput }}
+        <HelpTooltip v-if="row.input_tokens_deviated" width-class="w-72">
+          <template #trigger>
+            <span
+              class="inline-flex h-4 w-4 cursor-help items-center justify-center rounded-full text-[10px] font-extrabold leading-none text-white"
+              :class="deviationIconClass"
+              aria-hidden="true"
+            >
+              i
+            </span>
+          </template>
+          <div v-for="(line, i) in expectedInputLines" :key="i" :class="i > 0 ? 'mt-1' : ''">
+            {{ line }}
+          </div>
+        </HelpTooltip>
+        <span v-if="row.input_tokens_deviated" class="sr-only">{{ expectedInputLines.join('；') }}</span>
+      </span>
       <span v-if="row.output_tokens != null">↓{{ row.output_tokens }}</span>
     </div>
   </div>
@@ -66,11 +85,13 @@ const netInput = computed(() =>
   netInputTokens(props.row.input_tokens, props.row.cached_input_tokens),
 )
 
-const hasAnyDetail = computed(
-  () => probeLatency.value != null || userAvgTtft.value != null || tps.value != null,
-)
-
-const tooltipText = computed(() => {
+/**
+ * 主值 tooltip 的各行。
+ *
+ * 逐行渲染而不是拼成一个字符串塞给 content——HelpTooltip 的容器没开
+ * white-space 保留，`\n` 会被折成空格，几行说明会糊成一行。
+ */
+const detailLines = computed(() => {
   const lines: string[] = []
   if (probeTtft.value != null) {
     lines.push(`${t('providerHall.tooltip.probeTtft')}: ${probeTtft.value} ms`)
@@ -96,13 +117,34 @@ const tooltipText = computed(() => {
         `${props.row.input_tokens} - ${props.row.cached_input_tokens} = ${netInput.value}`,
     )
   }
-  return lines.join('\n')
+  return lines
 })
 
-const inflationTitle = computed(() => {
+/** 多报走警告色，少报走危险色——少报意味着 prompt 被截断或换掉了，性质更重。 */
+const deviationClass = computed(() => {
+  if (!props.row.input_tokens_deviated) return ''
+  return props.row.input_tokens_excess < 0
+    ? 'rounded bg-red-100 px-1 font-bold text-red-700 dark:bg-red-900/40 dark:text-red-300'
+    : 'rounded bg-amber-100 px-1 font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+})
+
+const deviationIconClass = computed(() =>
+  props.row.input_tokens_excess < 0 ? 'bg-red-500' : 'bg-amber-500',
+)
+
+const expectedInputLines = computed(() => {
+  const lines: string[] = []
   const expected = props.row.expected_input_tokens
-  const actual = props.row.input_tokens
-  if (expected == null || actual == null) return t('providerHall.inflatedHint')
-  return t('providerHall.inflatedDetail', { expected, actual })
+  if (expected != null) {
+    lines.push(t('providerHall.expectedInput', { expected }))
+  }
+  // 旁边 ↑ 显示的是净输入，判定用的却是含缓存的总输入。
+  // 缓存不为 0 时两个数对不上，不写清楚这条注释看起来会自相矛盾。
+  const total = props.row.input_tokens
+  const cached = props.row.cached_input_tokens
+  if (total != null && cached != null && cached > 0) {
+    lines.push(t('providerHall.expectedInputTotal', { actual: total, cached }))
+  }
+  return lines
 })
 </script>
