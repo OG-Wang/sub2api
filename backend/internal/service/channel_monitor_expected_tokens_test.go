@@ -74,8 +74,10 @@ func TestEvaluateMonitorInputTokens(t *testing.T) {
 		{"精确参考下超出容差即判定", exactRef, ptr(60), nil, true, true},
 		{"注入 system prompt", exactRef, ptr(420), nil, true, true},
 		{"低于参考值不是注水", exactRef, ptr(40), nil, true, false},
-		{"不精确参考下放宽到 25 token", fuzzyRef, ptr(74), nil, true, false},
-		{"不精确参考下超出宽阈值", fuzzyRef, ptr(76), nil, true, true},
+		// 本地只有 OpenAI 系 tokenizer，对其他 provider 算出来的数只是量级参考。
+		// 拿它判定会把每个这类渠道都误标成注水，所以一律不下结论。
+		{"参考值不精确时不下结论", fuzzyRef, ptr(74), nil, false, false},
+		{"参考值不精确时即使偏差很大也不下结论", fuzzyRef, ptr(500), nil, false, false},
 		{"手填基线覆盖本地计算", fuzzyRef, ptr(300), ptr(295), true, false},
 		{"手填基线下的注水", fuzzyRef, ptr(300), ptr(80), true, true},
 	}
