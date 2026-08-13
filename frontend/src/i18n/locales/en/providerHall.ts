@@ -49,6 +49,7 @@ export default {
       probeTotal: 'Probe end-to-end',
       userAvgTtft: 'User average first token',
       tps: 'TPS (estimated)',
+      inputBreakdown: 'Input = total - cached',
       ttftUnavailable: 'Showing probe end-to-end latency; first-token measurement is not enabled yet',
     },
     useGroupDialog: {
