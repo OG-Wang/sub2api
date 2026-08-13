@@ -1119,15 +1119,12 @@
 <script setup lang="ts">
 	import { ref, reactive, computed, onMounted, onUnmounted, type ComponentPublicInstance } from 'vue'
 	import { useI18n } from 'vue-i18n'
-	import { useRoute, useRouter } from 'vue-router'
 	import { useAppStore } from '@/stores/app'
 	import { useOnboardingStore } from '@/stores/onboarding'
 	import { useClipboard } from '@/composables/useClipboard'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 
 const { t } = useI18n()
-const route = useRoute()
-const router = useRouter()
 import { keysAPI, authAPI, usageAPI, userGroupsAPI } from '@/api'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import TablePageLayout from '@/components/layout/TablePageLayout.vue'
@@ -1522,31 +1519,6 @@ const loadUserGroupRates = async () => {
   } catch (error) {
     console.error('Failed to load user group rates:', error)
   }
-}
-
-/**
- * 处理来自供应商大厅「使用此分组」的跳转：?create=1&group_id=N
- * 自动打开创建弹窗并预选该分组。
- *
- * 必须在 loadGroups 之后调用——分组列表没到位时预选值会被 Select
- * 当成无效选项丢弃。
- *
- * 分组不在用户可用列表里（专属分组、订阅分组未订阅）时只开弹窗不预选，
- * 让用户自己选，而不是静默填一个他其实用不了的分组。
- */
-function applyCreateFromQuery() {
-  const query = route.query
-  if (query.create !== '1') return
-
-  const rawGroupID = Array.isArray(query.group_id) ? query.group_id[0] : query.group_id
-  const groupID = Number(rawGroupID)
-  if (Number.isFinite(groupID) && groups.value.some((g) => g.id === groupID)) {
-    formData.value.group_id = groupID
-  }
-  showCreateModal.value = true
-
-  // 清掉 query，避免刷新页面时反复弹窗。
-  void router.replace({ path: route.path, query: {} })
 }
 
 const loadPublicSettings = async () => {
@@ -1984,7 +1956,7 @@ function formatResetTime(resetAt: string | null): string {
 onMounted(() => {
   loadSavedColumns()
   loadApiKeys()
-  void loadGroups().then(applyCreateFromQuery)
+  loadGroups()
   loadUserGroupRates()
   loadPublicSettings()
   document.addEventListener('click', closeGroupSelector)
