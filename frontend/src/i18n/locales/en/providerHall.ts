@@ -1,15 +1,12 @@
 export default {
   providerHall: {
-    title: 'Provider Hall',
     description: 'Compare latency, availability and cache hit rate across groups, then pick one to create an API key',
     generatedAt: 'Generated at {time}',
     window: 'Time window',
-    loadError: 'Failed to load the provider hall',
-    disabledTitle: 'Provider Hall is not enabled',
-    disabledHint: 'This page needs channel monitoring running in "V1 + V2 hybrid" mode — it uses both active probe data and real user metrics. Ask an administrator to switch it in system settings.',
+    loadError: 'Failed to load channel status',
     passiveUnavailable: 'Real user metrics are temporarily unavailable; cache hit rate and availability fall back to active probe data.',
     emptyTitle: 'No channels to show for this platform',
-    emptyHint: 'An administrator must tick "Show on Provider Hall" under Channel Management → Channel Monitor for a channel to appear here.',
+    emptyHint: 'An administrator must tick "Show on Channel Status" under Channel Management → Channel Monitor for a channel to appear here.',
     tabs: {
       openai: 'OpenAI',
       anthropic: 'Anthropic',
