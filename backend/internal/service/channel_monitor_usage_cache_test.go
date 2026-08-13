@@ -19,7 +19,7 @@ const grokRealUsageChunk = `{"id":"397f6212","object":"chat.completion.chunk","m
 	`"prompt_tokens_details":{"text_tokens":257,"audio_tokens":0,"image_tokens":0,"cached_tokens":192},` +
 	`"completion_tokens_details":{"reasoning_tokens":2297}}}`
 
-func TestStreamUsageSubtractsCachedInputGrok(t *testing.T) {
+func TestStreamUsageSplitsCachedInputGrok(t *testing.T) {
 	sse := strings.Join([]string{
 		`data: {"choices":[{"index":0,"delta":{"content":"56","role":"assistant"}}]}`,
 		``,
@@ -35,8 +35,15 @@ func TestStreamUsageSubtractsCachedInputGrok(t *testing.T) {
 	}
 	result, _ := parseMonitorStream(strings.NewReader(sse), decoder, time.Now(), monitorResponseMaxBytes)
 
-	if result.InputTokens == nil || *result.InputTokens != 65 {
-		t.Errorf("input tokens = %v, want 65（257 总输入 - 192 缓存命中）", result.InputTokens)
+	if result.InputTokens == nil || *result.InputTokens != 257 {
+		t.Errorf("input tokens = %v, want 257（总输入，含缓存）", result.InputTokens)
+	}
+	if result.CachedInputTokens == nil || *result.CachedInputTokens != 192 {
+		t.Errorf("cached input tokens = %v, want 192", result.CachedInputTokens)
+	}
+	// 与网关用量记录对账用的是净输入。
+	if net := monitorNetInputTokens(result.InputTokens, result.CachedInputTokens); net == nil || *net != 65 {
+		t.Errorf("净输入 = %v, want 65（与用量记录一致）", net)
 	}
 	if result.OutputTokens == nil || *result.OutputTokens != 1 {
 		t.Errorf("output tokens = %v, want 1", result.OutputTokens)
@@ -44,10 +51,16 @@ func TestStreamUsageSubtractsCachedInputGrok(t *testing.T) {
 }
 
 // 非流式路径必须与流式得出同一个数，否则同一个渠道换个响应形态数字就会跳变。
-func TestNonStreamUsageSubtractsCachedInputGrok(t *testing.T) {
-	in, out := extractMonitorUsage(MonitorProviderGrok, MonitorAPIModeChatCompletions, grokRealUsageChunk)
-	if in == nil || *in != 65 {
-		t.Errorf("input tokens = %v, want 65", in)
+func TestNonStreamUsageSplitsCachedInputGrok(t *testing.T) {
+	in, cached, out := extractMonitorUsage(MonitorProviderGrok, MonitorAPIModeChatCompletions, grokRealUsageChunk)
+	if in == nil || *in != 257 {
+		t.Errorf("input tokens = %v, want 257", in)
+	}
+	if cached == nil || *cached != 192 {
+		t.Errorf("cached = %v, want 192", cached)
+	}
+	if net := monitorNetInputTokens(in, cached); net == nil || *net != 65 {
+		t.Errorf("净输入 = %v, want 65", net)
 	}
 	if out == nil || *out != 1 {
 		t.Errorf("output tokens = %v, want 1", out)
@@ -59,9 +72,16 @@ func TestAnthropicInputTokensNotDoubleSubtracted(t *testing.T) {
 	body := `{"usage":{"input_tokens":65,"output_tokens":2,"cache_read_input_tokens":192,` +
 		`"cache_creation_input_tokens":0}}`
 
-	in, _ := extractMonitorUsage(MonitorProviderAnthropic, MonitorAPIModeChatCompletions, body)
+	in, cached, _ := extractMonitorUsage(MonitorProviderAnthropic, MonitorAPIModeChatCompletions, body)
 	if in == nil || *in != 65 {
-		t.Errorf("input tokens = %v, want 65（Anthropic 不做扣减）", in)
+		t.Errorf("input tokens = %v, want 65（Anthropic 的 input_tokens 已排除缓存）", in)
+	}
+	// 未配置缓存 path，净输入必须等于原值，绝不能重复扣减。
+	if cached != nil {
+		t.Errorf("Anthropic 不应报缓存 path，得到 %d", *cached)
+	}
+	if net := monitorNetInputTokens(in, cached); net == nil || *net != 65 {
+		t.Errorf("净输入 = %v, want 65（不做二次扣减）", net)
 	}
 
 	sse := "data: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":65," +
@@ -76,9 +96,12 @@ func TestAnthropicInputTokensNotDoubleSubtracted(t *testing.T) {
 
 func TestGeminiSubtractsCachedContent(t *testing.T) {
 	body := `{"usageMetadata":{"promptTokenCount":257,"candidatesTokenCount":4,"cachedContentTokenCount":192}}`
-	in, out := extractMonitorUsage(MonitorProviderGemini, MonitorAPIModeChatCompletions, body)
-	if in == nil || *in != 65 {
-		t.Errorf("input tokens = %v, want 65", in)
+	in, cached, out := extractMonitorUsage(MonitorProviderGemini, MonitorAPIModeChatCompletions, body)
+	if in == nil || *in != 257 {
+		t.Errorf("input tokens = %v, want 257", in)
+	}
+	if net := monitorNetInputTokens(in, cached); net == nil || *net != 65 {
+		t.Errorf("净输入 = %v, want 65", net)
 	}
 	if out == nil || *out != 4 {
 		t.Errorf("output tokens = %v, want 4", out)
@@ -88,24 +111,24 @@ func TestGeminiSubtractsCachedContent(t *testing.T) {
 // 上游没报缓存字段时保持原值，不能把 nil 当成 0 去减。
 func TestUsageWithoutCacheFieldKeepsRawInput(t *testing.T) {
 	body := `{"usage":{"prompt_tokens":65,"completion_tokens":1}}`
-	in, _ := extractMonitorUsage(MonitorProviderOpenAI, MonitorAPIModeChatCompletions, body)
+	in, _, _ := extractMonitorUsage(MonitorProviderOpenAI, MonitorAPIModeChatCompletions, body)
 	if in == nil || *in != 65 {
 		t.Errorf("input tokens = %v, want 65", in)
 	}
 }
 
-func TestSubtractCachedInputEdgeCases(t *testing.T) {
+func TestMonitorNetInputTokensEdgeCases(t *testing.T) {
 	ptr := func(v int) *int { return &v }
 
-	if got := subtractCachedInput(nil, ptr(10)); got != nil {
+	if got := monitorNetInputTokens(nil, ptr(10)); got != nil {
 		t.Errorf("无输入时应返回 nil，得到 %d", *got)
 	}
-	if got := subtractCachedInput(ptr(65), nil); got == nil || *got != 65 {
+	if got := monitorNetInputTokens(ptr(65), nil); got == nil || *got != 65 {
 		t.Errorf("无缓存字段时应原样返回 65，得到 %v", got)
 	}
 	// 缓存大于总输入只可能是上游字段语义与预期不符。
 	// 落成 0 让异常显形，好过把负数写进库。
-	if got := subtractCachedInput(ptr(10), ptr(99)); got == nil || *got != 0 {
+	if got := monitorNetInputTokens(ptr(10), ptr(99)); got == nil || *got != 0 {
 		t.Errorf("缓存大于输入时应落成 0，得到 %v", got)
 	}
 }

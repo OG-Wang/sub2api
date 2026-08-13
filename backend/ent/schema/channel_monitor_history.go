@@ -62,10 +62,19 @@ func (ChannelMonitorHistory) Fields() []ent.Field {
 			Comment("Time to first token in ms; only available for streaming probes"),
 		// input_tokens: 上游报告的输入 token 数。探测 prompt 长度恒定，
 		// 该值显著高于基线说明上游注入了额外内容。
+		//
+		// 这里存的是「模型实际处理的总输入」（含缓存命中）。
+		// 不存扣掉缓存后的净输入：探测反复发送相同内容，缓存命中率会一路走高，
+		// 净输入随之趋近 0，画出来的曲线毫无意义。
+		// 需要与网关用量记录对账时用 input_tokens - cached_input_tokens。
 		field.Int("input_tokens").
 			Optional().
 			Nillable().
-			Comment("Upstream-reported prompt tokens; constant probe prompt makes deviation meaningful"),
+			Comment("Upstream-reported prompt tokens including cache hits; constant probe prompt makes deviation meaningful"),
+		field.Int("cached_input_tokens").
+			Optional().
+			Nillable().
+			Comment("Portion of input_tokens served from prompt cache"),
 		field.Int("output_tokens").
 			Optional().
 			Nillable().

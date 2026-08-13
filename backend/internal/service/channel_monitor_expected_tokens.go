@@ -129,6 +129,11 @@ type monitorInputTokenVerdict struct {
 //
 // actual 为 nil（上游没报 usage）时返回 nil —— 没有依据就不下结论。
 //
+// **参考值不可信时也返回 nil**：本地只有 OpenAI 系的 tokenizer，
+// 对 Anthropic / Gemini / Grok 算出来的数只是量级参考，拿它判定会把
+// 每个这类渠道都误标成注水，指标一旦不可信就等于没有。
+// 这些 provider 只采集展示，要判定就由管理员显式设基线。
+//
 // 只判「超出」方向：注入内容只会让输入变多。低于参考值可能是上游做了
 // 缓存或压缩，不是欺诈信号。
 //
@@ -138,23 +143,27 @@ func evaluateMonitorInputTokens(ref monitorTokenReference, actual, override *int
 	if actual == nil {
 		return nil
 	}
+
 	effective := ref
-	if override != nil && *override > 0 {
-		// 手填基线一律按「近似」处理：管理员填的是他从实测值里观察出来的
-		// 大致数字，不可能比本地计算更精确。按精确值零容差比对只会误报。
+	tolerance := monitorInputTokenExactTolerance
+	switch {
+	case override != nil && *override > 0:
+		// 手填基线按「近似」处理：管理员填的是他从实测值观察出来的大致数字，
+		// 不可能比本地计算更精确，零容差比对只会误报。
 		effective = monitorTokenReference{
 			PromptTokens: *override,
 			Expected:     *override,
-			Exact:        false,
 		}
-	}
-	if effective.Expected <= 0 {
+		tolerance = monitorMaxPlausibleFramingOverhead
+	case ref.Exact:
+		// 本地 tokenizer 与上游一致且框架开销有公开定义，可以严格比对。
+	default:
+		// 参考值不可信，不下结论。
 		return nil
 	}
 
-	tolerance := monitorMaxPlausibleFramingOverhead
-	if effective.Exact {
-		tolerance = monitorInputTokenExactTolerance
+	if effective.Expected <= 0 {
+		return nil
 	}
 
 	excess := *actual - effective.Expected
