@@ -17,10 +17,10 @@
 
     <!-- ↑输入 ↓输出 -->
     <div
-      v-if="row.input_tokens != null || row.output_tokens != null"
+      v-if="netInput != null || row.output_tokens != null"
       class="flex items-center gap-2 text-[11px] tabular-nums text-gray-500 dark:text-dark-400"
     >
-      <span v-if="row.input_tokens != null">↑{{ row.input_tokens }}</span>
+      <span v-if="netInput != null">↑{{ netInput }}</span>
       <span v-if="row.output_tokens != null">↓{{ row.output_tokens }}</span>
     </div>
   </div>
@@ -88,8 +88,8 @@ const tooltipText = computed(() => {
   if (tps.value != null) {
     lines.push(`${t('providerHall.tooltip.tps')}: ${tps.value.toFixed(1)}`)
   }
-  // ↑ 显示的是含缓存的总输入，和用量记录里的 input 对不上。
-  // 把换算摊开写清楚，省得再去猜差额哪来的。
+  // ↑ 展示的是净输入（与用量记录口径一致）。
+  // 这里补上总量，说明差额是缓存命中，省得再去猜。
   if (props.row.cached_input_tokens != null && props.row.input_tokens != null) {
     lines.push(
       `${t('providerHall.tooltip.inputBreakdown')}: ` +
