@@ -187,12 +187,13 @@
       </template>
     </TablePageLayout>
 
-    <HallCreateKeyDialog
-      :show="showCreateKey"
-      :group-id="createKeyTarget?.group_id ?? null"
-      :group-name="createKeyTarget?.group_name ?? ''"
-      @close="showCreateKey = false"
-      @created="showCreateKey = false"
+    <HallUseGroupDialog
+      :show="showUseGroup"
+      :group-id="useGroupTarget?.group_id ?? null"
+      :group-name="useGroupTarget?.group_name ?? ''"
+      :rate-multiplier="useGroupTarget?.rateMultiplier ?? null"
+      @close="showUseGroup = false"
+      @switched="showUseGroup = false"
     />
   </AppLayout>
 </template>
@@ -225,7 +226,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import HallLatencyCell from '@/components/user/hall/HallLatencyCell.vue'
 import HallSparkline, { type HallSparklineMetric } from '@/components/user/hall/HallSparkline.vue'
-import HallCreateKeyDialog from '@/components/user/hall/HallCreateKeyDialog.vue'
+import HallUseGroupDialog from '@/components/user/hall/HallUseGroupDialog.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -240,8 +241,8 @@ const generatedAt = ref('')
 const passiveAvailable = ref(true)
 const activeTab = ref<HallPlatformTab>('anthropic')
 const chartMetric = ref<HallSparklineMetric>('ttft')
-const showCreateKey = ref(false)
-const createKeyTarget = ref<HallRow | null>(null)
+const showUseGroup = ref(false)
+const useGroupTarget = ref<HallRow | null>(null)
 
 // V2 支持的窗口就是这四个；规格里写的 6h 并不存在，用 90m 代替最短档。
 const range = ref<MonitorRange>('24h')
@@ -354,11 +355,11 @@ function switchTab(tab: HallPlatformTab) {
   void reload()
 }
 
-/** 就地弹出创建 API Key 的窗口，预选该行的分组。 */
+/** 弹出「使用此分组」窗口：把已有 Key 切到该分组，或跳去新建。 */
 function useGroup(row: HallRow) {
   if (row.group_id == null) return
-  createKeyTarget.value = row
-  showCreateKey.value = true
+  useGroupTarget.value = row
+  showUseGroup.value = true
 }
 
 async function reload() {
