@@ -18321,30 +18321,32 @@ func (m *ChannelMonitorDailyRollupMutation) ResetEdge(name string) error {
 // ChannelMonitorHistoryMutation represents an operation that mutates the ChannelMonitorHistory nodes in the graph.
 type ChannelMonitorHistoryMutation struct {
 	config
-	op                 Op
-	typ                string
-	id                 *int64
-	model              *string
-	status             *channelmonitorhistory.Status
-	latency_ms         *int
-	addlatency_ms      *int
-	ping_latency_ms    *int
-	addping_latency_ms *int
-	message            *string
-	quota              **domain.MonitorQuotaSnapshot
-	checked_at         *time.Time
-	ttft_ms            *int
-	addttft_ms         *int
-	input_tokens       *int
-	addinput_tokens    *int
-	output_tokens      *int
-	addoutput_tokens   *int
-	clearedFields      map[string]struct{}
-	monitor            *int64
-	clearedmonitor     bool
-	done               bool
-	oldValue           func(context.Context) (*ChannelMonitorHistory, error)
-	predicates         []predicate.ChannelMonitorHistory
+	op                     Op
+	typ                    string
+	id                     *int64
+	model                  *string
+	status                 *channelmonitorhistory.Status
+	latency_ms             *int
+	addlatency_ms          *int
+	ping_latency_ms        *int
+	addping_latency_ms     *int
+	message                *string
+	quota                  **domain.MonitorQuotaSnapshot
+	checked_at             *time.Time
+	ttft_ms                *int
+	addttft_ms             *int
+	input_tokens           *int
+	addinput_tokens        *int
+	cached_input_tokens    *int
+	addcached_input_tokens *int
+	output_tokens          *int
+	addoutput_tokens       *int
+	clearedFields          map[string]struct{}
+	monitor                *int64
+	clearedmonitor         bool
+	done                   bool
+	oldValue               func(context.Context) (*ChannelMonitorHistory, error)
+	predicates             []predicate.ChannelMonitorHistory
 }
 
 var _ ent.Mutation = (*ChannelMonitorHistoryMutation)(nil)
@@ -18967,6 +18969,76 @@ func (m *ChannelMonitorHistoryMutation) ResetInputTokens() {
 	delete(m.clearedFields, channelmonitorhistory.FieldInputTokens)
 }
 
+// SetCachedInputTokens sets the "cached_input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) SetCachedInputTokens(i int) {
+	m.cached_input_tokens = &i
+	m.addcached_input_tokens = nil
+}
+
+// CachedInputTokens returns the value of the "cached_input_tokens" field in the mutation.
+func (m *ChannelMonitorHistoryMutation) CachedInputTokens() (r int, exists bool) {
+	v := m.cached_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCachedInputTokens returns the old "cached_input_tokens" field's value of the ChannelMonitorHistory entity.
+// If the ChannelMonitorHistory object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ChannelMonitorHistoryMutation) OldCachedInputTokens(ctx context.Context) (v *int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCachedInputTokens is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCachedInputTokens requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCachedInputTokens: %w", err)
+	}
+	return oldValue.CachedInputTokens, nil
+}
+
+// AddCachedInputTokens adds i to the "cached_input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) AddCachedInputTokens(i int) {
+	if m.addcached_input_tokens != nil {
+		*m.addcached_input_tokens += i
+	} else {
+		m.addcached_input_tokens = &i
+	}
+}
+
+// AddedCachedInputTokens returns the value that was added to the "cached_input_tokens" field in this mutation.
+func (m *ChannelMonitorHistoryMutation) AddedCachedInputTokens() (r int, exists bool) {
+	v := m.addcached_input_tokens
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearCachedInputTokens clears the value of the "cached_input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) ClearCachedInputTokens() {
+	m.cached_input_tokens = nil
+	m.addcached_input_tokens = nil
+	m.clearedFields[channelmonitorhistory.FieldCachedInputTokens] = struct{}{}
+}
+
+// CachedInputTokensCleared returns if the "cached_input_tokens" field was cleared in this mutation.
+func (m *ChannelMonitorHistoryMutation) CachedInputTokensCleared() bool {
+	_, ok := m.clearedFields[channelmonitorhistory.FieldCachedInputTokens]
+	return ok
+}
+
+// ResetCachedInputTokens resets all changes to the "cached_input_tokens" field.
+func (m *ChannelMonitorHistoryMutation) ResetCachedInputTokens() {
+	m.cached_input_tokens = nil
+	m.addcached_input_tokens = nil
+	delete(m.clearedFields, channelmonitorhistory.FieldCachedInputTokens)
+}
+
 // SetOutputTokens sets the "output_tokens" field.
 func (m *ChannelMonitorHistoryMutation) SetOutputTokens(i int) {
 	m.output_tokens = &i
@@ -19098,7 +19170,7 @@ func (m *ChannelMonitorHistoryMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ChannelMonitorHistoryMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.monitor != nil {
 		fields = append(fields, channelmonitorhistory.FieldMonitorID)
 	}
@@ -19128,6 +19200,9 @@ func (m *ChannelMonitorHistoryMutation) Fields() []string {
 	}
 	if m.input_tokens != nil {
 		fields = append(fields, channelmonitorhistory.FieldInputTokens)
+	}
+	if m.cached_input_tokens != nil {
+		fields = append(fields, channelmonitorhistory.FieldCachedInputTokens)
 	}
 	if m.output_tokens != nil {
 		fields = append(fields, channelmonitorhistory.FieldOutputTokens)
@@ -19160,6 +19235,8 @@ func (m *ChannelMonitorHistoryMutation) Field(name string) (ent.Value, bool) {
 		return m.TtftMs()
 	case channelmonitorhistory.FieldInputTokens:
 		return m.InputTokens()
+	case channelmonitorhistory.FieldCachedInputTokens:
+		return m.CachedInputTokens()
 	case channelmonitorhistory.FieldOutputTokens:
 		return m.OutputTokens()
 	}
@@ -19191,6 +19268,8 @@ func (m *ChannelMonitorHistoryMutation) OldField(ctx context.Context, name strin
 		return m.OldTtftMs(ctx)
 	case channelmonitorhistory.FieldInputTokens:
 		return m.OldInputTokens(ctx)
+	case channelmonitorhistory.FieldCachedInputTokens:
+		return m.OldCachedInputTokens(ctx)
 	case channelmonitorhistory.FieldOutputTokens:
 		return m.OldOutputTokens(ctx)
 	}
@@ -19272,6 +19351,13 @@ func (m *ChannelMonitorHistoryMutation) SetField(name string, value ent.Value) e
 		}
 		m.SetInputTokens(v)
 		return nil
+	case channelmonitorhistory.FieldCachedInputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCachedInputTokens(v)
+		return nil
 	case channelmonitorhistory.FieldOutputTokens:
 		v, ok := value.(int)
 		if !ok {
@@ -19299,6 +19385,9 @@ func (m *ChannelMonitorHistoryMutation) AddedFields() []string {
 	if m.addinput_tokens != nil {
 		fields = append(fields, channelmonitorhistory.FieldInputTokens)
 	}
+	if m.addcached_input_tokens != nil {
+		fields = append(fields, channelmonitorhistory.FieldCachedInputTokens)
+	}
 	if m.addoutput_tokens != nil {
 		fields = append(fields, channelmonitorhistory.FieldOutputTokens)
 	}
@@ -19318,6 +19407,8 @@ func (m *ChannelMonitorHistoryMutation) AddedField(name string) (ent.Value, bool
 		return m.AddedTtftMs()
 	case channelmonitorhistory.FieldInputTokens:
 		return m.AddedInputTokens()
+	case channelmonitorhistory.FieldCachedInputTokens:
+		return m.AddedCachedInputTokens()
 	case channelmonitorhistory.FieldOutputTokens:
 		return m.AddedOutputTokens()
 	}
@@ -19357,6 +19448,13 @@ func (m *ChannelMonitorHistoryMutation) AddField(name string, value ent.Value) e
 		}
 		m.AddInputTokens(v)
 		return nil
+	case channelmonitorhistory.FieldCachedInputTokens:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCachedInputTokens(v)
+		return nil
 	case channelmonitorhistory.FieldOutputTokens:
 		v, ok := value.(int)
 		if !ok {
@@ -19389,6 +19487,9 @@ func (m *ChannelMonitorHistoryMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(channelmonitorhistory.FieldInputTokens) {
 		fields = append(fields, channelmonitorhistory.FieldInputTokens)
+	}
+	if m.FieldCleared(channelmonitorhistory.FieldCachedInputTokens) {
+		fields = append(fields, channelmonitorhistory.FieldCachedInputTokens)
 	}
 	if m.FieldCleared(channelmonitorhistory.FieldOutputTokens) {
 		fields = append(fields, channelmonitorhistory.FieldOutputTokens)
@@ -19424,6 +19525,9 @@ func (m *ChannelMonitorHistoryMutation) ClearField(name string) error {
 		return nil
 	case channelmonitorhistory.FieldInputTokens:
 		m.ClearInputTokens()
+		return nil
+	case channelmonitorhistory.FieldCachedInputTokens:
+		m.ClearCachedInputTokens()
 		return nil
 	case channelmonitorhistory.FieldOutputTokens:
 		m.ClearOutputTokens()
@@ -19465,6 +19569,9 @@ func (m *ChannelMonitorHistoryMutation) ResetField(name string) error {
 		return nil
 	case channelmonitorhistory.FieldInputTokens:
 		m.ResetInputTokens()
+		return nil
+	case channelmonitorhistory.FieldCachedInputTokens:
+		m.ResetCachedInputTokens()
 		return nil
 	case channelmonitorhistory.FieldOutputTokens:
 		m.ResetOutputTokens()
