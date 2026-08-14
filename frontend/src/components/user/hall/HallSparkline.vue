@@ -37,6 +37,17 @@
         没有它就只有正好压在线上才出 tooltip，这条线只有 1.5 宽，等于点不中。
       -->
       <rect :width="VIEW_WIDTH" :height="VIEW_HEIGHT" fill="transparent" />
+      <!-- 异常点标记：探测到 degraded/failed/error 时显示红点 -->
+      <circle
+        v-for="(point, idx) in errorPoints"
+        :key="`error-${idx}`"
+        :cx="point.x"
+        :cy="point.y"
+        r="2"
+        fill="#ef4444"
+        class="error-marker"
+        vector-effect="non-scaling-stroke"
+      />
       <!-- 命中点高亮 -->
       <circle
         v-if="active"
@@ -146,6 +157,8 @@ interface RawPoint {
 /** 从探测时间线取指标序列。timeline 是最新在前，绘图要按时间正序。 */
 const probePoints = computed<ChartPoint[]>(() => {
   const raw: RawPoint[] = []
+  let lastValidValue: number | null = null
+
   for (const p of [...props.row.timeline].reverse()) {
     const value = pickProbeMetric(
       p.ttft_ms,
@@ -153,14 +166,19 @@ const probePoints = computed<ChartPoint[]>(() => {
       netInputTokens(p.input_tokens, p.cached_input_tokens),
       p.output_tokens,
     )
-    if (value == null) continue
+
+    // 错误点指标值为 null 时，用上一个有效值占位，让曲线保持连续
+    const displayValue = value ?? lastValidValue ?? 0
+
     raw.push({
       at: p.checked_at,
-      value,
+      value: displayValue,
       status: p.status,
       samples: null,
       ttftFallback: props.metric === 'ttft' && p.ttft_ms == null,
     })
+
+    if (value !== null) lastValidValue = value
   }
   return layout(raw, 'probe')
 })
@@ -216,6 +234,12 @@ function layout(raw: RawPoint[], series: SeriesKind): ChartPoint[] {
     if (p.value > max) max = p.value
   }
   const span = max - min
+
+  // 留出上下边距，避免曲线端点贴边
+  const PADDING_RATIO = 0.1
+  const plotHeight = VIEW_HEIGHT * (1 - 2 * PADDING_RATIO)
+  const offsetY = VIEW_HEIGHT * PADDING_RATIO
+
   const stepX = VIEW_WIDTH / (raw.length - 1)
   return raw.map((p, i) => {
     // 全平的序列（span=0）画在中线，避免除零。
@@ -224,7 +248,7 @@ function layout(raw: RawPoint[], series: SeriesKind): ChartPoint[] {
       ...p,
       series,
       x: i * stepX,
-      y: VIEW_HEIGHT - ratio * VIEW_HEIGHT,
+      y: VIEW_HEIGHT - offsetY - ratio * plotHeight,
     }
   })
 }
@@ -237,6 +261,47 @@ function toPolyline(points: ChartPoint[]): string | null {
 const probeLine = computed(() => toPolyline(probePoints.value))
 const userLine = computed(() => toPolyline(userPoints.value))
 const hasData = computed(() => probeLine.value !== null || userLine.value !== null)
+
+/**
+ * 异常点：状态为 failed/error 的探测点。
+ * 只在探测线上标记，用户线没有状态概念。
+ * degraded（缓慢）不算异常，不显示红点。
+ *
+ * 异常点的 x 坐标基于时间线索引，与当前选中的指标无关——
+ * 这样切换指标时红点位置保持一致，不会消失或跳动。
+ */
+const errorPoints = computed<ChartPoint[]>(() => {
+  const timeline = [...props.row.timeline].reverse()
+  if (timeline.length < 2) return []
+
+  const errorIndices: number[] = []
+  for (let i = 0; i < timeline.length; i++) {
+    const status = timeline[i].status
+    if (status === 'failed' || status === 'error') {
+      errorIndices.push(i)
+    }
+  }
+
+  // 用与 probePoints 相同的 x 分布逻辑
+  const stepX = VIEW_WIDTH / (timeline.length - 1)
+
+  return errorIndices.map((idx) => {
+    // 找到当前 probePoints 中对应时间戳的点，取其 y 坐标
+    const timestamp = timeline[idx].checked_at
+    const matchingPoint = probePoints.value.find(p => p.at === timestamp)
+
+    return {
+      at: timestamp,
+      value: matchingPoint?.value ?? 0,
+      status: timeline[idx].status,
+      samples: null,
+      ttftFallback: false,
+      series: 'probe' as SeriesKind,
+      x: idx * stepX,
+      y: matchingPoint?.y ?? VIEW_HEIGHT / 2,
+    }
+  })
+})
 
 // ---------------------------------------------------------------- 悬停与命中
 
