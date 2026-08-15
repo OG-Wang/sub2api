@@ -134,6 +134,7 @@ import { useAppStore } from '@/stores/app'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import { maskApiKey } from '@/utils/maskApiKey'
 import { keysAPI } from '@/api'
+import { formatRateMultiplier } from '@/api/providerHall'
 import type { ApiKey } from '@/types'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -246,7 +247,7 @@ function statusClass(status: string): string {
 }
 
 function formatRate(rate: number): string {
-  return `${rate.toFixed(2).replace(/\.?0+$/, '') || '0'}x`
+  return `${formatRateMultiplier(rate)}x`
 }
 
 function formatLastUsed(value: string | null): string {
