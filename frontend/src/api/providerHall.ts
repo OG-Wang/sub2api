@@ -162,6 +162,19 @@ function buildRateMap(
 }
 
 /**
+ * 倍率展示：有几位就显示几位，不补零也不截断。
+ * 0.1 → "0.1"，0.045 → "0.045"，0.0425 → "0.0425"，1 → "1"。
+ *
+ * 先四舍五入到 6 位小数再转回数字，只为抹掉浮点噪声
+ * （0.30000000000000004 这种），不是精度上限——后台倍率输入
+ * 的步进是 0.001，6 位远远够用。
+ */
+export function formatRateMultiplier(value: number): string {
+  if (!Number.isFinite(value)) return '—'
+  return String(Number(value.toFixed(6)))
+}
+
+/**
  * 净输入 = 总输入 - 缓存命中，即网关用量记录里的 input 口径。
  * 缺任一项时返回 null，不猜。
  */
