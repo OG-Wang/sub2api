@@ -82,7 +82,7 @@
         <!-- 倍率 -->
         <template #cell-rate="{ row }">
           <span v-if="row.rateMultiplier != null" class="tabular-nums">
-            {{ formatRate(row.rateMultiplier) }}
+            {{ formatRateMultiplier(row.rateMultiplier) }}
           </span>
           <span v-else class="text-gray-400 dark:text-dark-500">—</span>
         </template>
@@ -212,6 +212,7 @@ import {
   loadHallRows,
   rowMatchesTab,
   platformsForTab,
+  formatRateMultiplier,
   type HallPlatformTab,
   type HallRow,
 } from '@/api/providerHall'
@@ -293,10 +294,6 @@ function availabilityOf(row: HallRow): number {
 function formatPercent(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return '—'
   return `${value.toFixed(2)}%`
-}
-
-function formatRate(value: number): string {
-  return value.toFixed(2).replace(/\.?0+$/, '') || '0'
 }
 
 function statusLabel(status: string): string {
