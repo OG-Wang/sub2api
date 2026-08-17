@@ -1,6 +1,7 @@
 <template>
   <AppLayout>
-    <TablePageLayout>
+    <!-- table-page-scroll：分组多了之后滚轮滚整个页面，而不是困在表体里，见同名 css -->
+    <TablePageLayout class="table-page-scroll">
       <template #actions>
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -68,6 +69,7 @@
           row-key="id"
           default-sort-key="availability"
           default-sort-order="desc"
+          :virtualize-threshold="Infinity"
         >
         <!-- 分组 -->
         <template #cell-group="{ row }">
@@ -203,8 +205,15 @@
  *
  * 三份数据在前端按 group_id join（见 api/providerHall.ts），
  * 不新增后端聚合接口。
+ *
+ * 布局上比别的表格页多两处：
+ *   1. TablePageLayout 加 class="table-page-scroll" —— 改成整页滚动，见 styles/table-page-scroll.css；
+ *   2. 关掉 DataTable 的虚拟滚动 —— 虚拟器拿 .table-wrapper 当滚动容器
+ *      （getScrollElement），而整页滚动模式下那层已经不是滚动容器了，
+ *      超过默认 100 行就会算错渲染窗口。这页行数是分组数量级，全量渲染完全撑得住。
  */
 import { computed, onMounted, ref } from 'vue'
+import '@/styles/table-page-scroll.css'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { extractApiErrorMessage } from '@/utils/apiError'
