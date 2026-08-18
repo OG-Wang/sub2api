@@ -8,20 +8,45 @@
  */
 
 import { apiClient } from './client'
-import { getMatrix, type MonitorFilter, type MonitorMatrixRow } from './channelMonitorV2'
+import {
+  repeatedArrayParamsSerializer,
+  type MonitorFilter,
+  type MonitorMatrixResponse,
+  type MonitorMatrixRow,
+  type MonitorRange,
+} from './channelMonitorV2'
 import { userGroupsAPI } from './groups'
 import type { Group } from '@/types'
 
-/** 探测时间线单点。 */
+/**
+ * 探测时间线上的一个点，即**一次**探测。
+ *
+ * 刻意不做任何分桶/平均：桶内取平均会把一次真实故障抹进周围的正常样本里，
+ * 而这页存在的意义就是让人看见故障。按默认 300s 间隔，最长的 7d 窗口
+ * 每个监控也就 2016 个点，压缩后过网只有几百 KB，付得起。
+ */
 export interface HallTimelinePoint {
+  checked_at: string
   status: string
   latency_ms: number | null
-  ping_latency_ms: number | null
-  checked_at: string
   ttft_ms: number | null
   input_tokens: number | null
   cached_input_tokens: number | null
   output_tokens: number | null
+}
+
+/**
+ * 曲线的横轴定义，由后端按 range 算出（与 V2 matrix 用的是同一套窗口）。
+ * 两条线都按时间戳在 [start, end) 中的相对位置定横坐标，同一个 x 才是同一时刻。
+ *
+ * bucket_seconds 是 V2 用户线的桶粒度——探测线不分桶，它只用于判断
+ * 用户线上哪里断了。
+ */
+export interface HallWindow {
+  range: MonitorRange
+  start: string
+  end: string
+  bucket_seconds: number
 }
 
 export interface HallExtraModelStatus {
@@ -43,10 +68,19 @@ export interface HallMonitorItem {
   primary_model: string
   primary_status: string
   primary_latency_ms: number | null
-  availability_7d: number
+  /**
+   * 主模型在**当前窗口**内的探测可用率（0-100），窗口内没有探测时为 null。
+   *
+   * 跟着 range 走：曲线画的是哪段时间，这个数就是那段时间的。
+   * 曾经这里是写死 7 天的 availability_7d，切窗口纹丝不动——
+   * 一个此刻正挂着的渠道照样显示 60%。
+   */
+  availability: number | null
   extra_models: HallExtraModelStatus[]
   last_checked_at: string | null
   timeline: HallTimelinePoint[]
+  /** 探测间隔（秒），用于判断曲线上哪里是真的没探测。 */
+  interval_seconds: number
   primary_ttft_ms: number | null
   /** 上游报告的总输入，含缓存命中 */
   input_tokens: number | null
@@ -63,6 +97,15 @@ export interface HallMonitorItem {
 export interface HallMonitorResponse {
   items: HallMonitorItem[]
   generated_at: string
+  window: HallWindow
+  /**
+   * V2 被动统计，与 items 用的是同一个时间窗口。
+   *
+   * 刻意由这个接口一并返回，而不是前端再打一次 /channel-monitor-v2/matrix：
+   * 两个接口各自按 now 对齐窗口，请求跨过桶边界时会拿到相邻的两个区间，
+   * 曲线就会错开一个桶。V2 不可用时为 null。
+   */
+  passive: MonitorMatrixResponse | null
 }
 
 /** 三方数据 join 后的一行，供表格直接渲染。 */
@@ -92,34 +135,44 @@ export function rowMatchesTab(row: { platform: string }, tab: HallPlatformTab): 
   return platform === tab
 }
 
-export async function listHallMonitors(signal?: AbortSignal): Promise<HallMonitorResponse> {
-  const { data } = await apiClient.get<HallMonitorResponse>('/provider-hall/monitors', { signal })
+export async function listHallMonitors(
+  range: MonitorRange,
+  platforms: string[],
+  signal?: AbortSignal,
+): Promise<HallMonitorResponse> {
+  const { data } = await apiClient.get<HallMonitorResponse>('/provider-hall/monitors', {
+    params: { range, platform: platforms.length ? platforms : undefined },
+    paramsSerializer: { serialize: repeatedArrayParamsSerializer },
+    signal,
+  })
   return data
 }
 
 /**
- * 拉取并 join 三方数据。
+ * 拉取并 join 数据。
  *
- * V2 与分组倍率任一失败都不阻断页面：探测数据是主体，
- * 缺了被动指标只是少几列，缺了倍率只是不显示价格。
+ * 探测 + 被动统计由 /provider-hall/monitors 一次返回（同一个时间窗口，见 HallMonitorResponse.passive），
+ * 只有分组倍率还要单独取——它是用户专属的，跟监控数据不同源。
+ * 倍率失败不阻断页面，只是不显示价格。
  */
 export async function loadHallRows(
   filter: MonitorFilter,
   signal?: AbortSignal,
-): Promise<{ rows: HallRow[]; generatedAt: string; passiveAvailable: boolean }> {
-  const monitorsPromise = listHallMonitors(signal)
-  const matrixPromise = getMatrix(filter, 'platform_group', false, signal).catch(() => null)
+): Promise<{
+  rows: HallRow[]
+  generatedAt: string
+  passiveAvailable: boolean
+  window: HallWindow | null
+}> {
+  const monitorsPromise = listHallMonitors(filter.range, filter.platforms, signal)
   const groupsPromise = Promise.all([
     userGroupsAPI.getAvailable(),
     userGroupsAPI.getUserGroupRates(),
   ]).catch(() => null)
 
-  const [monitors, matrix, groupData] = await Promise.all([
-    monitorsPromise,
-    matrixPromise,
-    groupsPromise,
-  ])
+  const [monitors, groupData] = await Promise.all([monitorsPromise, groupsPromise])
 
+  const matrix = monitors.passive
   const passiveByGroup = new Map<number, MonitorMatrixRow>()
   for (const item of matrix?.items ?? []) {
     if (typeof item.group_id === 'number') passiveByGroup.set(item.group_id, item)
@@ -136,7 +189,8 @@ export async function loadHallRows(
   return {
     rows,
     generatedAt: monitors.generated_at,
-    passiveAvailable: matrix !== null,
+    passiveAvailable: matrix != null,
+    window: monitors.window ?? null,
   }
 }
 
