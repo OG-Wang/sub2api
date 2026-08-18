@@ -35,6 +35,7 @@
               <th class="px-3 py-2">{{ t('common.name') }}</th>
               <th class="px-3 py-2">{{ t('keys.apiKey') }}</th>
               <th class="px-3 py-2">{{ t('keys.group') }}</th>
+              <th class="w-10 px-3 py-2"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-dark-700">
@@ -42,6 +43,7 @@
               v-for="k in filteredKeys"
               :key="k.id"
               class="cursor-pointer hover:bg-gray-50 dark:hover:bg-dark-700"
+              :class="k.id === selectedKeyId && 'bg-primary-50/60 dark:bg-primary-900/20'"
               @click="$emit('pick', k)"
             >
               <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">{{ k.name }}</td>
@@ -56,6 +58,23 @@
                   :user-rate-multiplier="userGroupRates[k.group.id]"
                 />
                 <span v-else class="text-xs text-gray-400">—</span>
+              </td>
+              <td class="px-3 py-2">
+                <svg
+                  v-if="k.id === selectedKeyId"
+                  class="h-4 w-4 text-primary-600 dark:text-primary-400"
+                  data-testid="monitor-key-picked"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  role="img"
+                  :aria-label="t('admin.channelMonitor.form.selectedKeyMark')"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
               </td>
             </tr>
           </tbody>
@@ -87,8 +106,11 @@ const props = withDefaults(defineProps<{
   keys: ApiKey[]
   provider: Provider
   userGroupRates?: Record<number, number>
+  /** 本次表单里已选中的 Key，用于整行高亮 + 行末打勾；null 表示尚未选过。 */
+  selectedKeyId?: number | null
 }>(), {
   userGroupRates: () => ({}),
+  selectedKeyId: null,
 })
 
 defineEmits<{
