@@ -49,6 +49,11 @@ type ChannelMonitorRepository interface {
 	// ListRecentHistoryForMonitors 批量取多个 monitor 各自主模型（primaryModels[monitorID]）最近 perMonitorLimit 条历史。
 	// 返回的 entry 已按 checked_at DESC 排序（最新在前），不含 message 字段。
 	ListRecentHistoryForMonitors(ctx context.Context, ids []int64, primaryModels map[int64]string, perMonitorLimit int) (map[int64][]*ChannelMonitorHistoryEntry, error)
+	// ListHistoryInWindowForMonitors 批量取多个 monitor 各自主模型在 [start, end) 内的全部历史
+	// （供应商大厅曲线用，不做任何聚合——曲线要画出每一次探测）。
+	// perMonitorLimit 只是防炸的上限：正常间隔下取不满，探测间隔被设到下限时才截断，
+	// 截断时保留最近的那批。返回的切片按 checked_at 升序，不含 message 字段。
+	ListHistoryInWindowForMonitors(ctx context.Context, ids []int64, primaryModels map[int64]string, start, end time.Time, perMonitorLimit int) (map[int64][]*ChannelMonitorHistoryEntry, error)
 
 	// ---------- 聚合维护（OpsCleanupService 调用） ----------
 
