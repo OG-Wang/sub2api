@@ -105,6 +105,19 @@ vi.mock('vue-i18n', async () => {
   }
 })
 
+// KeysView 挂载时会读取 ?create=1&group_id=N（供应商大厅「使用此分组」跳转）。
+// 测试没装 router 插件，useRoute()/useRouter() 注入不到返回 undefined，
+// applyCreateFromQuery 在 undefined 上取 query 会逃逸成 unhandled rejection
+// （每次 mount 一条，vitest 归入 Errors 而测试照常全绿）。
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
+  return {
+    ...actual,
+    useRoute: () => ({ path: '/keys', query: {} }),
+    useRouter: () => ({ replace: vi.fn() }),
+  }
+})
+
 const createApiKey = (): ApiKey => ({
   id: 1,
   user_id: 1,
