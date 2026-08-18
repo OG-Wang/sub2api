@@ -11,10 +11,11 @@
       @mouseleave="onLeave"
       @click.stop="onClick"
     >
-      <!-- 探测线（V1 主动探测） -->
+      <!-- 探测线（V1 主动探测）。按数据空洞拆成多段，见 toSegments -->
       <polyline
-        v-if="probeLine"
-        :points="probeLine"
+        v-for="(seg, idx) in probeSegments"
+        :key="`probe-${idx}`"
+        :points="seg"
         fill="none"
         stroke="currentColor"
         stroke-width="1.5"
@@ -23,8 +24,9 @@
       />
       <!-- 用户线（V2 被动统计），与探测线对比才能看出探测是否代表真实体验 -->
       <polyline
-        v-if="userLine"
-        :points="userLine"
+        v-for="(seg, idx) in userSegments"
+        :key="`user-${idx}`"
+        :points="seg"
         fill="none"
         stroke="currentColor"
         stroke-width="1.5"
@@ -89,13 +91,17 @@
  * 但基线可能差一个数量级，共用一套刻度会把其中一条压成直线。
  * 曲线本身只用于看趋势，绝对值靠 tooltip 与第 4 列读。
  *
+ * 横轴则**必须**共用：x 由点的时间戳在 window [start, end) 中的相对位置算出，
+ * 而不是「第 i 个点 / 总点数」。后者在两条线点数不同时会让同一个 x
+ * 对应不同时刻，「探测 vs 真实用户」的对比就成了假的。
+ *
  * 命中判定在屏幕坐标里做而不是 viewBox 坐标：viewBox 是 100x24 但渲染成
  * 112x32（preserveAspectRatio="none"），两轴缩放比不同，
  * 直接用 viewBox 距离会让纵向偏差被低估，指哪儿命中哪儿就不准。
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { HallRow } from '@/api/providerHall'
+import type { HallRow, HallWindow } from '@/api/providerHall'
 import { computeTps, netInputTokens } from '@/api/providerHall'
 
 /** 曲线可切换的指标。 */
@@ -104,6 +110,8 @@ export type HallSparklineMetric = 'ttft' | 'tps' | 'inputTokens'
 const props = defineProps<{
   row: HallRow
   metric: HallSparklineMetric
+  /** 横轴窗口，与 row.passive 的桶同源。取不到就整格显示占位符，不画错轴的线。 */
+  window: HallWindow | null
 }>()
 
 const { t } = useI18n()
@@ -123,13 +131,13 @@ type SeriesKind = 'probe' | 'user'
 /** 曲线上的一个点。带上原始时间与状态，tooltip 才能说清「这是哪一刻的哪个数」。 */
 interface ChartPoint {
   series: SeriesKind
-  /** ISO 时间戳。 */
+  /** 探测线是该次探测的时刻，用户线是该桶的起点（ISO 时间戳）。 */
   at: string
   value: number
   /** 探测状态；用户线为空。 */
   status: string
-  /** 该桶的样本数；探测线为 null。 */
-  samples: number | null
+  /** 用户线该桶聚合了几条请求；探测线一点就是一次探测，为 null。 */
+  samples?: number | null
   /** 该点画的是探测总耗时而非真正的首 Token（TTFT 尚未采集到）。 */
   ttftFallback: boolean
   x: number
@@ -150,16 +158,19 @@ interface RawPoint {
   at: string
   value: number
   status: string
-  samples: number | null
+  samples?: number | null
   ttftFallback: boolean
 }
 
-/** 从探测时间线取指标序列。timeline 是最新在前，绘图要按时间正序。 */
+/**
+ * 从探测时间线取指标序列。
+ * 后端已按 checked_at 升序返回窗口内的**每一次**探测，不做分桶。
+ */
 const probePoints = computed<ChartPoint[]>(() => {
   const raw: RawPoint[] = []
   let lastValidValue: number | null = null
 
-  for (const p of [...props.row.timeline].reverse()) {
+  for (const p of props.row.timeline) {
     const value = pickProbeMetric(
       p.ttft_ms,
       p.latency_ms,
@@ -167,14 +178,13 @@ const probePoints = computed<ChartPoint[]>(() => {
       p.output_tokens,
     )
 
-    // 错误点指标值为 null 时，用上一个有效值占位，让曲线保持连续
+    // 这次探测没采到该指标时（多为失败），用上一个有效值占位，让曲线保持连续
     const displayValue = value ?? lastValidValue ?? 0
 
     raw.push({
       at: p.checked_at,
       value: displayValue,
       status: p.status,
-      samples: null,
       ttftFallback: props.metric === 'ttft' && p.ttft_ms == null,
     })
 
@@ -222,11 +232,28 @@ const userPoints = computed<ChartPoint[]>(() => {
 })
 
 /**
- * 序列归一化成画布坐标。
+ * 横轴：把窗口 [start, end) 线性映射到画布宽度。
+ *
+ * 算不出窗口就返回 null，layout() 随之交出空序列、整格显示占位符。
+ * 刻意不退回「按点数均分」：那会画出一条看着正常、但横轴是错的曲线——
+ * 两条线点数不同时同一个 x 不是同一时刻，而这正是本组件要解决的问题。
+ * 宁可什么都不画，也不画一条骗人的线。
+ */
+const timeAxis = computed<{ start: number; span: number; bucketMs: number } | null>(() => {
+  const start = Date.parse(props.window?.start ?? '')
+  const end = Date.parse(props.window?.end ?? '')
+  const bucketSeconds = props.window?.bucket_seconds ?? 0
+  if (Number.isNaN(start) || Number.isNaN(end) || end <= start || bucketSeconds <= 0) return null
+  return { start, span: end - start, bucketMs: bucketSeconds * 1000 }
+})
+
+/**
+ * 序列归一化成画布坐标：y 按本序列自身的极值归一，x 按绝对时间。
  * 少于 2 个点画不出线，返回空数组由上层显示占位符。
  */
 function layout(raw: RawPoint[], series: SeriesKind): ChartPoint[] {
-  if (raw.length < 2) return []
+  const axis = timeAxis.value
+  if (axis == null || raw.length < 2) return []
   let min = raw[0].value
   let max = raw[0].value
   for (const p of raw) {
@@ -240,68 +267,94 @@ function layout(raw: RawPoint[], series: SeriesKind): ChartPoint[] {
   const plotHeight = VIEW_HEIGHT * (1 - 2 * PADDING_RATIO)
   const offsetY = VIEW_HEIGHT * PADDING_RATIO
 
-  const stepX = VIEW_WIDTH / (raw.length - 1)
-  return raw.map((p, i) => {
+  return raw.map((p) => {
     // 全平的序列（span=0）画在中线，避免除零。
     const ratio = span === 0 ? 0.5 : (p.value - min) / span
     return {
       ...p,
       series,
-      x: i * stepX,
+      x: xOnAxis(axis, p.at),
       y: VIEW_HEIGHT - offsetY - ratio * plotHeight,
     }
   })
 }
 
-function toPolyline(points: ChartPoint[]): string | null {
-  if (points.length < 2) return null
-  return points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')
+/** 时间戳 → 横坐标。 */
+function xOnAxis(axis: { start: number; span: number }, at: string): number {
+  const t = Date.parse(at)
+  if (Number.isNaN(t)) return 0
+  const ratio = (t - axis.start) / axis.span
+  return Math.min(VIEW_WIDTH, Math.max(0, ratio * VIEW_WIDTH))
 }
 
-const probeLine = computed(() => toPolyline(probePoints.value))
-const userLine = computed(() => toPolyline(userPoints.value))
-const hasData = computed(() => probeLine.value !== null || userLine.value !== null)
-
 /**
- * 异常点：状态为 failed/error 的探测点。
- * 只在探测线上标记，用户线没有状态概念。
- * degraded（缓慢）不算异常，不显示红点。
+ * 把一条序列按数据空洞拆成多段 polyline。
  *
- * 异常点的 x 坐标基于时间线索引，与当前选中的指标无关——
- * 这样切换指标时红点位置保持一致，不会消失或跳动。
+ * 缺的时间段后端不会返回。若照旧把相邻点首尾相连，一段「监控停了三天」
+ * 会被画成一条平稳跨越三天的直线——看不出这里没有数据，反而像是稳定。
+ *
+ * gapMs 由调用方按各自的采样节奏给：超过它就认为中间那段真的没采到。
  */
-const errorPoints = computed<ChartPoint[]>(() => {
-  const timeline = [...props.row.timeline].reverse()
-  if (timeline.length < 2) return []
+function toSegments(points: ChartPoint[], gapMs: number): string[] {
+  if (points.length < 2 || gapMs <= 0) return []
 
-  const errorIndices: number[] = []
-  for (let i = 0; i < timeline.length; i++) {
-    const status = timeline[i].status
-    if (status === 'failed' || status === 'error') {
-      errorIndices.push(i)
+  const segments: string[] = []
+  let current: ChartPoint[] = []
+  const flush = () => {
+    if (current.length >= 2) {
+      segments.push(current.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '))
     }
+    current = []
   }
 
-  // 用与 probePoints 相同的 x 分布逻辑
-  const stepX = VIEW_WIDTH / (timeline.length - 1)
+  for (const p of points) {
+    const prev = current[current.length - 1]
+    if (prev && Date.parse(p.at) - Date.parse(prev.at) > gapMs) flush()
+    current.push(p)
+  }
+  flush()
+  return segments
+}
 
-  return errorIndices.map((idx) => {
-    // 找到当前 probePoints 中对应时间戳的点，取其 y 坐标
-    const timestamp = timeline[idx].checked_at
-    const matchingPoint = probePoints.value.find(p => p.at === timestamp)
-
-    return {
-      at: timestamp,
-      value: matchingPoint?.value ?? 0,
-      status: timeline[idx].status,
-      samples: null,
-      ttftFallback: false,
-      series: 'probe' as SeriesKind,
-      x: idx * stepX,
-      y: matchingPoint?.y ?? VIEW_HEIGHT / 2,
-    }
-  })
+/**
+ * 探测线的断点阈值：2.5 倍探测间隔。
+ *
+ * 用 2.5 而不是 1.5，是为了容忍调度抖动（monitor 可以配 jitter）加偶尔漏一拍——
+ * 这两种情况连起来是对的。真正的停摆动辄几十上百拍，照样会被断开。
+ * 拿不到间隔时退回窗口的十分之一，只求别把整条线连成一根。
+ */
+const probeGapMs = computed(() => {
+  const interval = props.row.interval_seconds
+  if (interval > 0) return interval * 2500
+  const axis = timeAxis.value
+  return axis ? axis.span / 10 : 0
 })
+
+const probeSegments = computed(() => toSegments(probePoints.value, probeGapMs.value))
+/** 用户线是 V2 按桶聚合的，相邻桶的间隔就是桶长，超过 1.5 倍即缺桶。 */
+const userSegments = computed(() =>
+  toSegments(userPoints.value, (timeAxis.value?.bucketMs ?? 0) * 1.5),
+)
+/**
+ * 有没有东西可画。
+ *
+ * layout() 已经把「不足 2 个点」的序列清空了（画不出趋势），
+ * 所以这里非空就等于至少有一条线。但不能改用 segments 判断：
+ * 一条全是空洞、每段都不足 2 点的序列 segments 为空，
+ * 此时仍有异常红点要画。
+ */
+const hasData = computed(() => probePoints.value.length > 0 || userPoints.value.length > 0)
+
+/**
+ * 异常点：桶内出现过 failed/error 的时间桶，在探测线上标红。
+ * degraded（缓慢）不算异常，不标。
+ *
+ * 直接从 probePoints 里筛，坐标天然与线一致：切换指标时红点跟着线上下走，
+ * 不会飘在空处，也不会因为时间轴换算方式不同而横向错位。
+ */
+const errorPoints = computed<ChartPoint[]>(() =>
+  probePoints.value.filter((p) => p.status === 'failed' || p.status === 'error'),
+)
 
 // ---------------------------------------------------------------- 悬停与命中
 
@@ -469,7 +522,10 @@ function formatValue(point: ChartPoint): string {
   }
 }
 
-/** 用户线补样本数（几条请求平均出来的），探测线补非正常状态。 */
+/**
+ * 补充说明行：用户线补样本数（几条请求平均出来的），探测线补非正常状态。
+ * 探测线一个点就是一次探测，没有「几次平均」可说。
+ */
 function noteFor(point: ChartPoint): string {
   if (point.series === 'user') {
     return point.samples == null ? '' : t('providerHall.chart.samples', { count: point.samples })

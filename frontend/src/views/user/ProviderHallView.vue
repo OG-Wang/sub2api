@@ -141,7 +141,7 @@
           </div>
         </template>
         <template #cell-chart="{ row }">
-          <HallSparkline :row="row" :metric="chartMetric" />
+          <HallSparkline :row="row" :metric="chartMetric" :window="chartWindow" />
         </template>
 
         <!-- 最近监测 -->
@@ -224,6 +224,7 @@ import {
   formatRateMultiplier,
   type HallPlatformTab,
   type HallRow,
+  type HallWindow,
 } from '@/api/providerHall'
 import type { MonitorRange } from '@/api/channelMonitorV2'
 import type { Column } from '@/components/common/types'
@@ -248,16 +249,19 @@ const passiveAvailable = ref(true)
 // 默认落在第一个标签页，跟着 PLATFORM_TABS 的顺序走，改名/换序都不用动这里。
 const activeTab = ref<HallPlatformTab>(PLATFORM_TABS[0])
 const chartMetric = ref<HallSparklineMetric>('ttft')
+// 曲线的横轴，由后端按 range 算出；探测线与用户线共用它才对得齐。
+const chartWindow = ref<HallWindow | null>(null)
 const showUseGroup = ref(false)
 const useGroupTarget = ref<HallRow | null>(null)
 
-// V2 支持的窗口就是这四个；规格里写的 6h 并不存在，用 90m 代替最短档。
+// 大厅只用这三档。V2 的 ParseFilter 还支持 30d，但探测历史保留就是 30 天，
+// 30 天窗口下最早那几个桶必然是空的，且要对全表做分桶平均（实测 2.3s），
+// 不值得为一条注定残缺的曲线付这个代价。
 const range = ref<MonitorRange>('24h')
 const rangeOptions = computed(() => [
   { value: '90m', label: t('providerHall.ranges.90m') },
   { value: '24h', label: t('providerHall.ranges.24h') },
   { value: '7d', label: t('providerHall.ranges.7d') },
-  { value: '30d', label: t('providerHall.ranges.30d') },
 ])
 
 const metricOptions = computed(() => [
@@ -272,7 +276,12 @@ const columns = computed<Column[]>(() => [
   { key: 'status', label: t('providerHall.columns.status') },
   { key: 'latency', label: t('providerHall.columns.latency'), sortable: true },
   { key: 'cache', label: t('providerHall.columns.cache') },
-  { key: 'availability', label: t('providerHall.columns.availability'), sortable: true },
+  {
+    key: 'availability',
+    // 表头带上窗口：这一列现在跟着 range 变，不写清楚就还是看不出它统计的是哪一段。
+    label: `${t('providerHall.columns.availability')} · ${t(`providerHall.rangesShort.${range.value}`)}`,
+    sortable: true,
+  },
   { key: 'chart', label: t('providerHall.columns.chart') },
   { key: 'checked', label: t('providerHall.columns.checked') },
   { key: 'actions', label: t('providerHall.columns.actions') },
@@ -291,14 +300,18 @@ const visibleRows = computed(() =>
 )
 
 /**
- * 可用率优先取 V2 的真实成功率——那是用户实际请求的结果。
- * 没有被动数据时退回 V1 探测的 7 天可用率。
+ * 可用率：优先用 V2 的真实成功率，没有真实流量时退回探测可用率。
+ * 两个来源都已经按当前窗口统计，切换时间窗口这一列会跟着变。
+ *
+ * `request_count > 0` 这个条件不能省：窗口内一条请求都没有时 error_rate 是 0，
+ * 换算出来就是「100% 可用」——一个凭空捏造的满分，还会盖掉探测算出的真实值。
+ * 本地实测 grok 分组 90m/24h/7d 的 request_count 全是 0，列里却显示 100%，
+ * 把探测的 95.91% 顶掉了。
  */
-function availabilityOf(row: HallRow): number {
-  const successRate = row.passive?.metrics
-    ? 100 - row.passive.metrics.error_rate * 100
-    : null
-  return successRate ?? row.availability_7d
+function availabilityOf(row: HallRow): number | null {
+  const passive = row.passive?.metrics
+  if (passive && passive.request_count > 0) return 100 - passive.error_rate * 100
+  return row.availability
 }
 
 function formatPercent(value: number | null | undefined): string {
@@ -399,6 +412,7 @@ async function reload() {
     rows.value = result.rows
     generatedAt.value = result.generatedAt
     passiveAvailable.value = result.passiveAvailable
+    chartWindow.value = result.window
   } catch (err: unknown) {
     appStore.showError(extractApiErrorMessage(err, t('providerHall.loadError')))
   } finally {
