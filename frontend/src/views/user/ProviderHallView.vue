@@ -133,15 +133,9 @@
           <span class="tabular-nums">{{ formatPercent(availabilityOf(row)) }}</span>
         </template>
 
-        <!-- 曲线 -->
-        <template #header-chart>
-          <div class="flex items-center gap-2">
-            <span>{{ t('providerHall.columns.chart') }}</span>
-            <Select v-model="chartMetric" :options="metricOptions" class="w-28" @click.stop />
-          </div>
-        </template>
+        <!-- 曲线：格子里放状态条概览，点开看每个探测点都不省的大图 -->
         <template #cell-chart="{ row }">
-          <HallSparkline :row="row" :metric="chartMetric" :window="chartWindow" />
+          <HallStatusBand :row="row" :window="chartWindow" @open="openTrend(row)" />
         </template>
 
         <!-- 最近监测 -->
@@ -193,6 +187,15 @@
       @close="showUseGroup = false"
       @switched="showUseGroup = false"
     />
+
+    <HallTrendDialog
+      v-model:metric="chartMetric"
+      :show="showTrend"
+      :row="trendTarget"
+      :window="chartWindow"
+      :range-label="rangeLabel"
+      @close="showTrend = false"
+    />
   </AppLayout>
 </template>
 
@@ -234,7 +237,9 @@ import DataTable from '@/components/common/DataTable.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import Select from '@/components/common/Select.vue'
 import HallLatencyCell from '@/components/user/hall/HallLatencyCell.vue'
-import HallSparkline, { type HallSparklineMetric } from '@/components/user/hall/HallSparkline.vue'
+import type { HallSparklineMetric } from '@/components/user/hall/HallSparkline.vue'
+import HallStatusBand from '@/components/user/hall/HallStatusBand.vue'
+import HallTrendDialog from '@/components/user/hall/HallTrendDialog.vue'
 import HallUseGroupDialog from '@/components/user/hall/HallUseGroupDialog.vue'
 
 const { t } = useI18n()
@@ -253,6 +258,9 @@ const chartMetric = ref<HallSparklineMetric>('ttft')
 const chartWindow = ref<HallWindow | null>(null)
 const showUseGroup = ref(false)
 const useGroupTarget = ref<HallRow | null>(null)
+// 曲线放大弹窗：格子里只放概览状态条，精确到每个探测点的曲线在这里看。
+const showTrend = ref(false)
+const trendTarget = ref<HallRow | null>(null)
 
 // 大厅只用这三档。V2 的 ParseFilter 还支持 30d，但探测历史保留就是 30 天，
 // 30 天窗口下最早那几个桶必然是空的，且要对全表做分桶平均（实测 2.3s），
@@ -264,11 +272,8 @@ const rangeOptions = computed(() => [
   { value: '7d', label: t('providerHall.ranges.7d') },
 ])
 
-const metricOptions = computed(() => [
-  { value: 'ttft', label: t('providerHall.metrics.ttft') },
-  { value: 'tps', label: t('providerHall.metrics.tps') },
-  { value: 'inputTokens', label: t('providerHall.metrics.inputTokens') },
-])
+/** 弹窗标题里标明当前看的是哪一段时间。 */
+const rangeLabel = computed(() => t(`providerHall.rangesShort.${range.value}`))
 
 const columns = computed<Column[]>(() => [
   { key: 'group', label: t('providerHall.columns.group') },
@@ -397,6 +402,12 @@ function useGroup(row: HallRow) {
   if (row.group_id == null) return
   useGroupTarget.value = row
   showUseGroup.value = true
+}
+
+/** 打开曲线放大弹窗。 */
+function openTrend(row: HallRow) {
+  trendTarget.value = row
+  showTrend.value = true
 }
 
 async function reload() {
