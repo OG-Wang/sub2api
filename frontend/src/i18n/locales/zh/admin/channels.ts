@@ -554,6 +554,8 @@ export default {
         selectKeyTitle: '选择我的 API Key',
         selectKeyHint: '仅显示当前账号下处于「启用」状态且未过期的 Key。',
         noActiveKey: '没有可用的启用状态 Key',
+        selectedKey: '已选择',
+        selectedKeyMark: '当前选中',
         primaryModel: '主模型',
         primaryModelPlaceholder: 'gpt-4o-mini',
         extraModels: '附加模型',

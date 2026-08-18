@@ -554,6 +554,8 @@ export default {
         selectKeyTitle: 'Select my API Key',
         selectKeyHint: 'Only your active, non-expired keys are listed.',
         noActiveKey: 'No active API keys available',
+        selectedKey: 'Selected',
+        selectedKeyMark: 'Currently selected',
         primaryModel: 'Primary Model',
         primaryModelPlaceholder: 'gpt-4o-mini',
         extraModels: 'Extra Models',
