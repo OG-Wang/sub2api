@@ -122,6 +122,7 @@
             {{ t('admin.channelMonitor.form.useMyKey') }}
           </button>
         </div>
+        <MonitorSelectedKeyBadge :selected-key="selectedKey" :user-group-rates="userGroupRates" />
         <p v-if="editing && editing.api_key_masked" class="mt-1 text-xs text-gray-400">{{ editing.api_key_masked }}</p>
       </div>
 
@@ -241,6 +242,7 @@
     :keys="myActiveKeys"
     :provider="form.provider"
     :user-group-rates="userGroupRates"
+    :selected-key-id="selectedKey?.id ?? null"
     @close="showKeyPicker = false"
     @pick="pickMyKey"
   />
@@ -271,6 +273,7 @@ import Select from '@/components/common/Select.vue'
 import ModelTagInput from '@/components/admin/channel/ModelTagInput.vue'
 import { getPlatformTextClass } from '@/components/admin/channel/types'
 import MonitorKeyPickerDialog from '@/components/admin/monitor/MonitorKeyPickerDialog.vue'
+import MonitorSelectedKeyBadge from '@/components/admin/monitor/MonitorSelectedKeyBadge.vue'
 import MonitorAdvancedRequestConfig from '@/components/admin/monitor/MonitorAdvancedRequestConfig.vue'
 import MonitorProviderHallConfig from '@/components/admin/monitor/MonitorProviderHallConfig.vue'
 import ProviderIcon from '@/components/user/monitor/ProviderIcon.vue'
@@ -328,6 +331,7 @@ const showKeyPicker = ref(false)
 const myKeysLoading = ref(false)
 const myActiveKeys = ref<ApiKey[]>([])
 const userGroupRates = ref<Record<number, number>>({})
+const pickedKey = ref<ApiKey | null>(null)
 
 interface MonitorForm {
   name: string
@@ -387,6 +391,17 @@ const usesProbePart = computed(() => form.check_mode !== CHECK_MODE_QUOTA)
 
 // jitter 上限与后端校验一致：interval - jitter 不得低于最小检测间隔 15 秒。
 const maxJitterSeconds = computed<number>(() => Math.max(0, (form.interval_seconds || 0) - 15))
+
+// 本次表单里选中的 Key。刻意做成派生值而不是自己维护的状态：
+// 本组件在 ChannelMonitorView 里是常驻挂载的（没有 v-if），组件级 ref 跨弹窗
+// 开关、跨不同监控项都不会重置，手动清理漏一处就会出现「编辑 A 时选的 Key
+// 在编辑 B 时还挂着」这种自信的错标记。这里以 form.api_key 为唯一真相：
+// 重开弹窗、切 provider、手动改输入框都会让它变化，标记随之自动失效。
+const selectedKey = computed<ApiKey | null>(() => {
+  const picked = pickedKey.value
+  if (!picked || !form.api_key) return null
+  return picked.key === form.api_key ? picked : null
+})
 
 let suppressFormWatchers = false
 
@@ -840,6 +855,7 @@ async function openMyKeyPicker() {
 
 function pickMyKey(k: ApiKey) {
   form.api_key = k.key
+  pickedKey.value = k
   showKeyPicker.value = false
 }
 
