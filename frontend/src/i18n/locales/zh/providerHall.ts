@@ -57,6 +57,32 @@ export default {
     chart: {
       samples: '{count} 条请求平均',
     },
+    // 「曲线」列格子里的状态条概览
+    band: {
+      openHint: '点击查看完整曲线',
+      allOk: '全部正常',
+      failures: '{count} 次异常',
+      degraded: '{count} 次缓慢',
+      okCount: '{count} 次正常',
+      noProbe: '暂无探测',
+    },
+    // 曲线放大弹窗
+    trendDialog: {
+      title: '{group} · 完整曲线（{range}）',
+      metricLabel: '指标',
+      densityLabel: '密度',
+      density: {
+        compact: '紧凑',
+        standard: '标准',
+        wide: '展开',
+      },
+      legendProbe: '探测线（主动探测）',
+      legendUser: '用户线（真实流量）',
+      legendError: '异常点',
+      pointsNote: '已完整绘制 {count} 个探测点，未做聚合或降采样',
+      scrollHint: '← 横向滚动查看全部时间 →',
+      empty: '该窗口内没有可绘制的数据',
+    },
     useGroupDialog: {
       title: '使用分组：{group}',
       rate: '倍率 {rate}',
