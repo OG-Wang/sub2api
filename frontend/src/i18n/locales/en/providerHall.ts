@@ -16,7 +16,12 @@ export default {
       '90m': 'Last 90 minutes',
       '24h': 'Last 24 hours',
       '7d': 'Last 7 days',
-      '30d': 'Last 30 days',
+    },
+    // Short window label appended to column headers; must fit a narrow column.
+    rangesShort: {
+      '90m': '90m',
+      '24h': '24h',
+      '7d': '7d',
     },
     columns: {
       group: 'Group',
