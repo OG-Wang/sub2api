@@ -2,8 +2,8 @@
   <div class="flex flex-col gap-1">
     <svg
       v-if="hasData"
-      :viewBox="`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`"
-      class="h-8 w-28 cursor-crosshair"
+      :viewBox="`0 0 ${width} ${height}`"
+      :class="['cursor-crosshair', svgClass]"
       preserveAspectRatio="none"
       role="img"
       :aria-label="ariaLabel"
@@ -38,14 +38,14 @@
         透明命中层：SVG 只在图元上触发鼠标事件，线之间的空白处不会触发。
         没有它就只有正好压在线上才出 tooltip，这条线只有 1.5 宽，等于点不中。
       -->
-      <rect :width="VIEW_WIDTH" :height="VIEW_HEIGHT" fill="transparent" />
+      <rect :width="width" :height="height" fill="transparent" />
       <!-- 异常点标记：探测到 degraded/failed/error 时显示红点 -->
       <circle
         v-for="(point, idx) in errorPoints"
         :key="`error-${idx}`"
         :cx="point.x"
         :cy="point.y"
-        r="2"
+        :r="pointRadius"
         fill="#ef4444"
         class="error-marker"
         vector-effect="non-scaling-stroke"
@@ -55,7 +55,7 @@
         v-if="active"
         :cx="active.point.x"
         :cy="active.point.y"
-        r="2.2"
+        :r="pointRadius * 1.1"
         fill="currentColor"
         stroke="white"
         stroke-width="1"
@@ -107,17 +107,33 @@ import { computeTps, netInputTokens } from '@/api/providerHall'
 /** 曲线可切换的指标。 */
 export type HallSparklineMetric = 'ttft' | 'tps' | 'inputTokens'
 
-const props = defineProps<{
-  row: HallRow
-  metric: HallSparklineMetric
-  /** 横轴窗口，与 row.passive 的桶同源。取不到就整格显示占位符，不画错轴的线。 */
-  window: HallWindow | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    row: HallRow
+    metric: HallSparklineMetric
+    /** 横轴窗口，与 row.passive 的桶同源。取不到就整格显示占位符，不画错轴的线。 */
+    window: HallWindow | null
+    /**
+     * viewBox 尺寸。放大展示时必须跟着渲染像素一起放大，否则
+     * preserveAspectRatio="none" 会把两轴按不同比例拉伸，
+     * 红点被抻成横向的椭圆——正是本组件要避免的"糊成一片"。
+     */
+    width?: number
+    height?: number
+    /** 渲染尺寸交给调用方：格子里是小图，弹窗里铺满可滚动的宽画布。 */
+    svgClass?: string
+    /** 异常红点半径，随画布一起放大才不会在大图上变成看不见的小针尖。 */
+    pointRadius?: number
+  }>(),
+  {
+    width: 100,
+    height: 24,
+    svgClass: 'h-8 w-28',
+    pointRadius: 2,
+  },
+)
 
 const { t } = useI18n()
-
-const VIEW_WIDTH = 100
-const VIEW_HEIGHT = 24
 
 /** tooltip 固定宽度，用于水平夹取，省掉「渲染完再量一次」的抖动。 */
 const TOOLTIP_WIDTH = 224
@@ -264,8 +280,8 @@ function layout(raw: RawPoint[], series: SeriesKind): ChartPoint[] {
 
   // 留出上下边距，避免曲线端点贴边
   const PADDING_RATIO = 0.1
-  const plotHeight = VIEW_HEIGHT * (1 - 2 * PADDING_RATIO)
-  const offsetY = VIEW_HEIGHT * PADDING_RATIO
+  const plotHeight = props.height * (1 - 2 * PADDING_RATIO)
+  const offsetY = props.height * PADDING_RATIO
 
   return raw.map((p) => {
     // 全平的序列（span=0）画在中线，避免除零。
@@ -274,7 +290,7 @@ function layout(raw: RawPoint[], series: SeriesKind): ChartPoint[] {
       ...p,
       series,
       x: xOnAxis(axis, p.at),
-      y: VIEW_HEIGHT - offsetY - ratio * plotHeight,
+      y: props.height - offsetY - ratio * plotHeight,
     }
   })
 }
@@ -284,7 +300,7 @@ function xOnAxis(axis: { start: number; span: number }, at: string): number {
   const t = Date.parse(at)
   if (Number.isNaN(t)) return 0
   const ratio = (t - axis.start) / axis.span
-  return Math.min(VIEW_WIDTH, Math.max(0, ratio * VIEW_WIDTH))
+  return Math.min(props.width, Math.max(0, ratio * props.width))
 }
 
 /**
@@ -385,8 +401,8 @@ function locate(event: MouseEvent): ActiveState | null {
   const rect = (event.currentTarget as SVGSVGElement).getBoundingClientRect()
   if (rect.width <= 0 || rect.height <= 0) return null
 
-  const scaleX = rect.width / VIEW_WIDTH
-  const scaleY = rect.height / VIEW_HEIGHT
+  const scaleX = rect.width / props.width
+  const scaleY = rect.height / props.height
   const localX = event.clientX - rect.left
   const localY = event.clientY - rect.top
 

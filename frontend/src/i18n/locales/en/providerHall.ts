@@ -57,6 +57,32 @@ export default {
     chart: {
       samples: 'averaged over {count} requests',
     },
+    // Status band shown inside the "Trend" table cell
+    band: {
+      openHint: 'Click to view the full curve',
+      allOk: 'All healthy',
+      failures: '{count} failure(s)',
+      degraded: '{count} degraded',
+      okCount: '{count} healthy',
+      noProbe: 'No probes',
+    },
+    // Enlarged curve dialog
+    trendDialog: {
+      title: '{group} · Full curve ({range})',
+      metricLabel: 'Metric',
+      densityLabel: 'Density',
+      density: {
+        compact: 'Compact',
+        standard: 'Standard',
+        wide: 'Wide',
+      },
+      legendProbe: 'Probe (active checks)',
+      legendUser: 'Users (real traffic)',
+      legendError: 'Failures',
+      pointsNote: 'All {count} probe points drawn — no aggregation, no downsampling',
+      scrollHint: '← scroll horizontally to see the whole window →',
+      empty: 'No data to plot in this window',
+    },
     useGroupDialog: {
       title: 'Use group: {group}',
       rate: 'Rate {rate}',
