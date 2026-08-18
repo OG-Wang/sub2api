@@ -5,8 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
+
+	"github.com/lib/pq"
 )
 
 // 供应商大厅的只读查询。
@@ -31,6 +34,7 @@ const channelMonitorHallQuery = `
 	       m.report_url,
 	       m.expected_input_tokens,
 	       m.last_checked_at,
+	       m.interval_seconds,
 	       g.platform,
 	       g.name
 	FROM channel_monitors m
@@ -83,6 +87,7 @@ func scanChannelMonitorHallRow(rows *sql.Rows) (*service.ChannelMonitorHallRow, 
 		&reportURL,
 		&expectedInput,
 		&lastCheckedAt,
+		&row.IntervalSeconds,
 		&groupPlatform,
 		&groupRealName,
 	); err != nil {
@@ -132,4 +137,100 @@ func decodeChannelMonitorExtraModels(raw []byte) ([]string, error) {
 		return []string{}, nil
 	}
 	return models, nil
+}
+
+// channelMonitorHallTimelineQuery 取窗口内的全部探测记录，**不做聚合**。
+//
+// 曲线要求「一次探测一个点」：桶内平均会把一次真实故障抹进周围的正常样本里，
+// 而这页存在的意义就是让人看见故障。传输成本实测可接受——7d 全量点、21 个监控
+// 约 6.4MB，线上 Caddy 开了 zstd+gzip6，压缩比 18x，过网 352KB。
+//
+// ROW_NUMBER 只是防炸上限（见 service.hallTimelineMaxPoints）：
+// 默认 300s 间隔下 7d 才 2016 点，取不满；探测间隔被设到下限 15s 时才截断，
+// 且保留最近的那批（ORDER BY checked_at DESC 排名）。
+//
+// 索引：与上游 ListRecentHistoryForMonitors 同形，
+// 走 (monitor_id, model, checked_at DESC)。加了时间范围后规划器有可能改选
+// checked_at 单列索引再 hash join，两条路都可接受——没有聚合就没有排序落盘，
+// 实测 7d/21 监控（54 万行表）在 100ms 量级。
+//
+// 不含 message 字段，减少响应体。
+const channelMonitorHallTimelineQuery = `
+	WITH targets AS (
+	    SELECT unnest($1::bigint[]) AS monitor_id,
+	           unnest($2::text[])   AS model
+	),
+	ranked AS (
+	    SELECT h.monitor_id,
+	           h.status,
+	           h.latency_ms,
+	           h.ping_latency_ms,
+	           h.checked_at,
+	           h.ttft_ms,
+	           h.input_tokens,
+	           h.cached_input_tokens,
+	           h.output_tokens,
+	           ROW_NUMBER() OVER (PARTITION BY h.monitor_id ORDER BY h.checked_at DESC) AS rn
+	    FROM channel_monitor_histories h
+	    JOIN targets t
+	      ON t.monitor_id = h.monitor_id AND t.model = h.model
+	    WHERE h.checked_at >= $3 AND h.checked_at < $4
+	)
+	SELECT monitor_id, status, latency_ms, ping_latency_ms, checked_at,
+	       ttft_ms, input_tokens, cached_input_tokens, output_tokens
+	FROM ranked
+	WHERE rn <= $5
+	ORDER BY monitor_id, checked_at
+`
+
+// ListHistoryInWindowForMonitors 见 service.ChannelMonitorRepository 接口说明。
+func (r *channelMonitorRepository) ListHistoryInWindowForMonitors(
+	ctx context.Context,
+	ids []int64,
+	primaryModels map[int64]string,
+	start, end time.Time,
+	perMonitorLimit int,
+) (map[int64][]*service.ChannelMonitorHistoryEntry, error) {
+	out := make(map[int64][]*service.ChannelMonitorHistoryEntry, len(ids))
+	pairIDs, pairModels := buildMonitorModelPairs(ids, primaryModels)
+	if len(pairIDs) == 0 {
+		return out, nil
+	}
+	// 窗口非法时返回空而不是报错：调用方拿到空曲线会显示占位符，
+	// 比整页 500 合理。正常路径下窗口由 ParseFilter 产出，不会走到这里。
+	if !end.After(start) || perMonitorLimit <= 0 {
+		return out, nil
+	}
+
+	rows, err := r.db.QueryContext(
+		ctx, channelMonitorHallTimelineQuery,
+		pq.Array(pairIDs), pq.Array(pairModels), start.UTC(), end.UTC(), perMonitorLimit,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("query hall timeline: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var monitorID int64
+		entry := &service.ChannelMonitorHistoryEntry{}
+		var latency, ping, ttft, inputTokens, cachedInputTokens, outputTokens sql.NullInt64
+		if err := rows.Scan(
+			&monitorID, &entry.Status, &latency, &ping, &entry.CheckedAt,
+			&ttft, &inputTokens, &cachedInputTokens, &outputTokens,
+		); err != nil {
+			return nil, fmt.Errorf("scan hall timeline row: %w", err)
+		}
+		assignNullInt(&entry.LatencyMs, latency)
+		assignNullInt(&entry.PingLatencyMs, ping)
+		assignNullInt(&entry.TTFTMs, ttft)
+		assignNullInt(&entry.InputTokens, inputTokens)
+		assignNullInt(&entry.CachedInputTokens, cachedInputTokens)
+		assignNullInt(&entry.OutputTokens, outputTokens)
+		out[monitorID] = append(out[monitorID], entry)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
