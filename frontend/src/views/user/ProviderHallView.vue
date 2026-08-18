@@ -120,10 +120,10 @@
           <HallLatencyCell :row="row" />
         </template>
 
-        <!-- 缓存命中率 -->
+        <!-- 缓存命中率。cache_rate 是 0-1 小数（上游展示层也是 ×100 后出百分号） -->
         <template #cell-cache="{ row }">
           <span v-if="row.passive" class="tabular-nums">
-            {{ formatPercent(row.passive.metrics.cache_rate) }}
+            {{ formatPercent(row.passive.metrics.cache_rate * 100) }}
           </span>
           <span v-else class="text-gray-400 dark:text-dark-500">—</span>
         </template>
