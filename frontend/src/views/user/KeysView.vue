@@ -1984,7 +1984,11 @@ function formatResetTime(resetAt: string | null): string {
 onMounted(() => {
   loadSavedColumns()
   loadApiKeys()
-  void loadGroups().then(applyCreateFromQuery)
+  // loadGroups 自己吞错误，这条链上会 reject 的只有 applyCreateFromQuery；
+  // 不接 .catch 它抛的任何异常都是静默的 unhandled rejection，没人看得见。
+  void loadGroups()
+    .then(applyCreateFromQuery)
+    .catch((error) => console.error('Failed to apply create query:', error))
   loadUserGroupRates()
   loadPublicSettings()
   document.addEventListener('click', closeGroupSelector)
