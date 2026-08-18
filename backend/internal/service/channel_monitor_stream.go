@@ -171,7 +171,8 @@ func parseMonitorStream(
 				ms := int(time.Since(start) / time.Millisecond)
 				result.TTFTMs = &ms
 			}
-			text.WriteString(delta)
+			// strings.Builder.WriteString 的 error 恒为 nil（见标准库文档），显式忽略以过 errcheck。
+			_, _ = text.WriteString(delta)
 		}
 		if v := decoder.inputTokens(event); v != nil {
 			result.InputTokens = v
