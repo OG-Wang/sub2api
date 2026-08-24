@@ -77,7 +77,8 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 		}
 	}
 	isResponsesLiteAccount := account.IsOpenAIOAuthLike() || account.IsOpenAIApiKey()
-	if isResponsesLiteAccount && isOpenAIResponsesLiteHeader(c.GetHeader(responsesLiteHeader)) {
+	isResponsesLiteRequest := isResponsesLiteAccount && isOpenAIResponsesLiteHeader(c.GetHeader(responsesLiteHeader))
+	if isResponsesLiteRequest {
 		liteBody, changed, liteErr := normalizeOpenAIResponsesLiteToolsPayload(body)
 		if liteErr != nil {
 			param := "tools"
@@ -152,11 +153,13 @@ func (s *OpenAIGatewayService) Forward(ctx context.Context, c *gin.Context, acco
 		return s.forwardResponsesViaNativeAnthropic(ctx, c, account, body, reqModel)
 	}
 	if account.IsOpenAIApiKey() {
-		if normalized, changed, normalizeErr := normalizeOpenAIParallelToolCallsWithoutTools(body); normalizeErr != nil {
-			return nil, normalizeErr
-		} else if changed {
-			body = normalized
-			originalBody = normalized
+		if !isResponsesLiteRequest {
+			if normalized, changed, normalizeErr := normalizeOpenAIParallelToolCallsWithoutTools(body); normalizeErr != nil {
+				return nil, normalizeErr
+			} else if changed {
+				body = normalized
+				originalBody = normalized
+			}
 		}
 		if normalized, changed, normalizeErr := normalizeOpenAIAPIKeyStoreFalseReasoningReplay(body, isOpenAIResponsesCompactPath(c)); normalizeErr != nil {
 			return nil, normalizeErr

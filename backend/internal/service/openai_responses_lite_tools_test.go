@@ -201,7 +201,7 @@ func TestNormalizeOpenAIResponsesLiteTools_ForcesParallelToolCallsFalse(t *testi
 	}
 }
 
-func TestNormalizeOpenAIResponsesLiteTools_DoesNotAddParallelToolCallsWithoutTools(t *testing.T) {
+func TestNormalizeOpenAIResponsesLiteTools_ForcesSerialCallsWithoutTools(t *testing.T) {
 	reqBody := map[string]any{
 		"reasoning":           map[string]any{"context": "all_turns"},
 		"parallel_tool_calls": true,
@@ -210,8 +210,8 @@ func TestNormalizeOpenAIResponsesLiteTools_DoesNotAddParallelToolCallsWithoutToo
 	changed, err := normalizeOpenAIResponsesLiteTools(reqBody)
 
 	require.NoError(t, err)
-	require.False(t, changed)
-	require.Equal(t, true, reqBody["parallel_tool_calls"])
+	require.True(t, changed)
+	require.Equal(t, false, reqBody["parallel_tool_calls"])
 }
 
 func TestNormalizeOpenAIResponsesLiteTools_RejectsNonBooleanParallelToolCalls(t *testing.T) {
@@ -479,6 +479,44 @@ func TestOpenAIGatewayServiceForward_NormalizesResponsesLiteToolsForAPIKey(t *te
 		"reasoning":{"effort":"high","context":"current_turn"},
 		"parallel_tool_calls":true,
 		"tools":[{"type":"function","name":"shell","parameters":{"type":"object"}}],
+		"input":[{"type":"message","role":"user","content":"hello"}]
+	}`)
+
+	result, err := svc.Forward(context.Background(), c, account, body)
+
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.NotNil(t, upstream.lastReq)
+	require.Equal(t, "true", upstream.lastReq.Header.Get(responsesLiteHeader))
+	require.Equal(t, "all_turns", gjson.GetBytes(upstream.lastBody, "reasoning.context").String())
+	require.True(t, gjson.GetBytes(upstream.lastBody, "parallel_tool_calls").Exists())
+	require.False(t, gjson.GetBytes(upstream.lastBody, "parallel_tool_calls").Bool())
+}
+
+func TestOpenAIGatewayServiceForward_KeepsResponsesLiteSerialCallsWithoutToolsForAPIKey(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	rec := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(rec)
+	c.Request = httptest.NewRequest(http.MethodPost, "/v1/responses", bytes.NewReader(nil))
+	c.Request.Header.Set(responsesLiteHeader, "true")
+	upstream := &httpUpstreamRecorder{resp: &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+		Body: io.NopCloser(strings.NewReader(
+			`{"id":"resp_lite_apikey_no_tools","status":"completed","model":"gpt-5.6-sol","output":[],"usage":{"input_tokens":1,"output_tokens":1}}`,
+		)),
+	}}
+	svc := &OpenAIGatewayService{cfg: &config.Config{}, httpUpstream: upstream}
+	account := &Account{
+		ID: 503, Name: "responses-lite-apikey-no-tools", Platform: PlatformOpenAI, Type: AccountTypeAPIKey,
+		Concurrency: 1, Status: StatusActive, Schedulable: true, RateMultiplier: f64p(1),
+		Credentials: map[string]any{"api_key": "test-key"},
+	}
+	body := []byte(`{
+		"model":"gpt-5.6-sol","stream":false,"instructions":"test",
+		"reasoning":{"effort":"high","context":"current_turn"},
+		"parallel_tool_calls":true,
 		"input":[{"type":"message","role":"user","content":"hello"}]
 	}`)
 
