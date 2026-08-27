@@ -7118,6 +7118,23 @@
                 </p>
               </div>
 
+              <div>
+                <label class="input-label">
+                  {{ t('admin.settings.features.channelMonitor.failureThreshold') }}
+                </label>
+                <input
+                  v-model.number="form.channel_monitor_failure_threshold"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="1"
+                  class="input"
+                />
+                <p class="mt-1 text-xs text-gray-400">
+                  {{ t('admin.settings.features.channelMonitor.failureThresholdHint') }}
+                </p>
+              </div>
+
               <div v-if="form.channel_monitor_mode !== 'v1'" class="flex items-start justify-between gap-4">
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-gray-900 dark:text-white">
@@ -9809,6 +9826,7 @@ const form = reactive<SettingsForm>({
   channel_monitor_enabled: true,
   channel_monitor_mode: 'v1' as 'v1' | 'v2' | 'hybrid',
   channel_monitor_default_interval_seconds: 60,
+  channel_monitor_failure_threshold: 3,
   channel_monitor_hide_throughput: false,
   channel_monitor_show_quota: false,
   // Available Channels feature switch
@@ -11475,6 +11493,10 @@ async function saveSettings() {
           : 'v2',
       channel_monitor_default_interval_seconds:
         Number(form.channel_monitor_default_interval_seconds) || 60,
+      channel_monitor_failure_threshold: Math.max(
+        1,
+        Math.min(100, Math.trunc(Number(form.channel_monitor_failure_threshold) || 3)),
+      ),
       channel_monitor_hide_throughput: Boolean(form.channel_monitor_hide_throughput),
       channel_monitor_show_quota: Boolean(form.channel_monitor_show_quota),
       // Available Channels feature switch
