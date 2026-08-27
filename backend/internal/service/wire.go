@@ -656,6 +656,16 @@ func ProvideAPIKeyAuthCacheInvalidator(apiKeyService *APIKeyService) APIKeyAuthC
 	return apiKeyService
 }
 
+// ProvideChannelOnboardingAPIKeyGenerator exposes only key generation to the
+// onboarding orchestrator, keeping the orchestration dependency narrow.
+func ProvideChannelOnboardingAPIKeyGenerator(apiKeyService *APIKeyService) APIKeyGenerator {
+	return apiKeyService
+}
+
+func ProvideChannelOnboardingSchedulerCache(snapshot *SchedulerSnapshotService) SchedulerAccountCache {
+	return snapshot
+}
+
 // ProvideImageStorageSettingService 构造异步生图对象存储的后台设置服务。
 //
 // config.yaml 里的 image_storage 作为回落：后台从未保存过设置时沿用它，
@@ -825,6 +835,8 @@ var ProviderSet = wire.NewSet(
 	NewUserService,
 	ProvideAPIKeyService,
 	ProvideAPIKeyAuthCacheInvalidator,
+	ProvideChannelOnboardingAPIKeyGenerator,
+	ProvideChannelOnboardingSchedulerCache,
 	ProvideAuthCacheInvalidationWorker,
 	NewGroupService,
 	NewCompositeRouteResolver,
@@ -940,6 +952,7 @@ var ProviderSet = wire.NewSet(
 	ProvidePaymentOrderExpiryService,
 	ProvideBalanceNotifyService,
 	ProvideChannelMonitorService,
+	NewChannelOnboardingService,
 	ProvideChannelMonitorRunner,
 	NewChannelMonitorQuotaFetcher,
 	ProvideChannelMonitorV2Service,

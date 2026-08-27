@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	dbent "github.com/Wei-Shaw/sub2api/ent"
 	"github.com/Wei-Shaw/sub2api/internal/domain"
 	"golang.org/x/sync/errgroup"
 )
@@ -206,10 +207,21 @@ func (s *ChannelMonitorService) Create(ctx context.Context, p ChannelMonitorCrea
 	// 不再调 s.Get 重走解密链：已知刚加密的明文，直接构造响应。
 	// 这样可避免 SecretEncryptor 解密失败时 APIKey 被静默清空的问题（见 Fix 4）。
 	m.APIKey = strings.TrimSpace(p.APIKey)
-	if s.scheduler != nil {
+	if s.scheduler != nil && dbent.TxFromContext(ctx) == nil {
 		s.scheduler.Schedule(m)
 	}
 	return m, nil
+}
+
+// ScheduleAfterCommit publishes a monitor to the runtime scheduler after an
+// outer transaction has committed. It is intentionally separate from Create:
+// transaction-scoped creates must not become runnable before their row exists
+// outside the transaction.
+func (s *ChannelMonitorService) ScheduleAfterCommit(m *ChannelMonitor) {
+	if s == nil || s.scheduler == nil || m == nil {
+		return
+	}
+	s.scheduler.Schedule(m)
 }
 
 // Duplicate creates an independent, disabled copy of an existing monitor.

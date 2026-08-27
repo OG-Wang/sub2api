@@ -123,10 +123,11 @@ func newAccountRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor, schedul
 }
 
 func (r *accountRepository) Create(ctx context.Context, account *service.Account) error {
-	if err := createAccountRecord(ctx, r.client, account); err != nil {
+	client := clientFromContext(ctx, r.client)
+	if err := createAccountRecord(ctx, client, account); err != nil {
 		return err
 	}
-	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &account.ID, nil, buildSchedulerGroupPayload(account.GroupIDs)); err != nil {
+	if err := enqueueSchedulerOutbox(ctx, client, service.SchedulerOutboxEventAccountChanged, &account.ID, nil, buildSchedulerGroupPayload(account.GroupIDs)); err != nil {
 		logger.LegacyPrintf("repository.account", "[SchedulerOutbox] enqueue account create failed: account=%d err=%v", account.ID, err)
 	}
 	return nil
@@ -208,18 +209,20 @@ func (r *accountRepository) CreateWithAccountGroups(ctx context.Context, account
 	if account == nil {
 		return service.ErrAccountNilInput
 	}
-	tx, err := r.client.Tx(ctx)
-	if err != nil && !errors.Is(err, dbent.ErrTxStarted) {
-		return err
-	}
-
+	contextTx := dbent.TxFromContext(ctx)
+	var tx *dbent.Tx
 	var txClient *dbent.Client
-	if err == nil {
+	if contextTx != nil {
+		txClient = contextTx.Client()
+	} else {
+		var err error
+		tx, err = r.client.Tx(ctx)
+		if err != nil {
+			return err
+		}
 		defer func() { _ = tx.Rollback() }()
 		txClient = tx.Client()
-	} else {
-		// Reuse a caller-owned transaction when this repository is already transactional.
-		txClient = r.client
+		ctx = dbent.NewTxContext(ctx, tx)
 	}
 
 	if err := createAccountRecord(ctx, txClient, account); err != nil {
@@ -269,6 +272,15 @@ func (r *accountRepository) GetByID(ctx context.Context, id int64) (*service.Acc
 		return nil, service.ErrAccountNotFound
 	}
 	return &accounts[0], nil
+}
+
+// ExistsByName reports whether an active account already uses the name.
+// It is intentionally kept off AccountRepository's broad interface because
+// existing account-service test doubles do not need this admin-only check.
+func (r *accountRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
+	return clientFromContext(ctx, r.client).Account.Query().
+		Where(dbaccount.NameEQ(strings.TrimSpace(name))).
+		Exist(ctx)
 }
 
 func (r *accountRepository) GetByIDs(ctx context.Context, ids []int64) ([]*service.Account, error) {
@@ -3310,7 +3322,7 @@ func uniquePositiveInt64s(ids []int64) []int64 {
 }
 
 func (r *accountRepository) loadAccountGroupIDs(ctx context.Context, accountID int64) ([]int64, error) {
-	entries, err := r.client.AccountGroup.
+	entries, err := clientFromContext(ctx, r.client).AccountGroup.
 		Query().
 		Where(dbaccountgroup.AccountIDEQ(accountID)).
 		All(ctx)

@@ -44,10 +44,11 @@ func newGroupRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor) *groupRep
 }
 
 func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) error {
-	if err := createGroupRecord(ctx, r.client, groupIn); err != nil {
+	client := clientFromContext(ctx, r.client)
+	if err := createGroupRecord(ctx, client, groupIn); err != nil {
 		return err
 	}
-	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
+	if err := enqueueSchedulerOutbox(ctx, client, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
 		logger.LegacyPrintf("repository.group", "[SchedulerOutbox] enqueue group create failed: group=%d err=%v", groupIn.ID, err)
 	}
 	return nil
@@ -231,7 +232,7 @@ func (r *groupRepository) GetByID(ctx context.Context, id int64) (*service.Group
 
 func (r *groupRepository) GetByIDLite(ctx context.Context, id int64) (*service.Group, error) {
 	// AccountCount is intentionally not loaded here; use GetByID when needed.
-	m, err := r.client.Group.Query().
+	m, err := clientFromContext(ctx, r.client).Group.Query().
 		Where(group.IDEQ(id)).
 		Only(ctx)
 	if err != nil {
@@ -722,7 +723,7 @@ func (r *groupRepository) ListActiveByPlatform(ctx context.Context, platform str
 }
 
 func (r *groupRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
-	return r.client.Group.Query().Where(group.NameEQ(name)).Exist(ctx)
+	return clientFromContext(ctx, r.client).Group.Query().Where(group.NameEQ(name)).Exist(ctx)
 }
 
 // ExistsByIDs 批量检查分组是否存在（仅检查未软删除记录）。

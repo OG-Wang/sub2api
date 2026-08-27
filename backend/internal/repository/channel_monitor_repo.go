@@ -84,6 +84,15 @@ func (r *channelMonitorRepository) Create(ctx context.Context, m *service.Channe
 	return nil
 }
 
+// ExistsByName is used by the atomic admin onboarding workflow for its
+// user-facing duplicate-name rule. The schema does not make monitor names
+// globally unique, so the check belongs at the workflow boundary.
+func (r *channelMonitorRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
+	return clientFromContext(ctx, r.client).ChannelMonitor.Query().
+		Where(channelmonitor.NameEQ(strings.TrimSpace(name))).
+		Exist(ctx)
+}
+
 func (r *channelMonitorRepository) FindByDuplicateOperationID(ctx context.Context, operationID string) (*service.ChannelMonitor, error) {
 	if strings.TrimSpace(operationID) == "" {
 		return nil, nil
