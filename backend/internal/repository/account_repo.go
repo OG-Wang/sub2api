@@ -208,18 +208,25 @@ func (r *accountRepository) CreateWithAccountGroups(ctx context.Context, account
 	if account == nil {
 		return service.ErrAccountNilInput
 	}
-	tx, err := r.client.Tx(ctx)
-	if err != nil && !errors.Is(err, dbent.ErrTxStarted) {
-		return err
-	}
-
+	var tx *dbent.Tx
 	var txClient *dbent.Client
-	if err == nil {
-		defer func() { _ = tx.Rollback() }()
-		txClient = tx.Client()
+	if contextTx := dbent.TxFromContext(ctx); contextTx != nil {
+		// A caller-owned transaction carried in the context (admin channel
+		// onboarding) owns commit/rollback; this method only joins it.
+		txClient = contextTx.Client()
 	} else {
-		// Reuse a caller-owned transaction when this repository is already transactional.
-		txClient = r.client
+		newTx, err := r.client.Tx(ctx)
+		if err != nil && !errors.Is(err, dbent.ErrTxStarted) {
+			return err
+		}
+		if err == nil {
+			tx = newTx
+			defer func() { _ = tx.Rollback() }()
+			txClient = tx.Client()
+		} else {
+			// Reuse a caller-owned transaction when this repository is already transactional.
+			txClient = r.client
+		}
 	}
 
 	if err := createAccountRecord(ctx, txClient, account); err != nil {
