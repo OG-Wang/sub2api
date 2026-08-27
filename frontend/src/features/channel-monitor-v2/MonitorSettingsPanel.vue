@@ -246,6 +246,28 @@
             {{ t('channelMonitorV2.settings.namedModelsCount', { count: namedModelCount }) }}
           </template>
         </div>
+        <div class="card overflow-hidden !rounded-3xl !border-0 shadow-sm ring-1 ring-gray-900/5 dark:!bg-dark-800 dark:ring-dark-700">
+          <div class="card-header !py-3">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('channelMonitorV2.settings.displayTitle') }}</h3>
+            <p class="mt-0.5 text-xs text-gray-500 dark:text-dark-400">
+              {{ t('channelMonitorV2.settings.failureThresholdHint') }}
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+            <label class="input-label" for="channel-monitor-failure-threshold">
+              {{ t('channelMonitorV2.settings.failureThreshold') }}
+            </label>
+            <input
+              id="channel-monitor-failure-threshold"
+              v-model.number="failureThreshold"
+              class="input w-28"
+              type="number"
+              min="1"
+              max="100"
+              step="1"
+            />
+          </div>
+        </div>
         <div class="rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-xs text-gray-600 dark:border-dark-600 dark:bg-dark-800/50 dark:text-gray-300">
           <p class="font-medium text-gray-800 dark:text-gray-100">{{ t('channelMonitorV2.settings.userContractTitle') }}</p>
           <ul class="mt-1.5 list-disc space-y-0.5 pl-4">
@@ -284,8 +306,14 @@ const saving = ref(false)
 const draft = ref<MonitorConfig | null>(null)
 const original = ref('')
 const groups = ref<AdminGroup[]>([])
+const failureThreshold = ref(3)
+const originalFailureThreshold = ref(3)
 
-const dirty = computed(() => (draft.value ? JSON.stringify(draft.value) !== original.value : false))
+const dirty = computed(
+  () =>
+    Boolean(draft.value) &&
+    (JSON.stringify(draft.value) !== original.value || failureThreshold.value !== originalFailureThreshold.value)
+)
 const namedModelCount = computed(
   () => draft.value?.platforms.filter((p) => p.enabled).reduce((sum, p) => sum + p.models.length, 0) || 0
 )
@@ -404,14 +432,27 @@ function normalizeConfig(value: MonitorConfig): MonitorConfig {
   }
 }
 
+function normalizeFailureThreshold(value: number): number {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return 3
+  return Math.max(1, Math.min(100, Math.trunc(parsed)))
+}
+
 async function load() {
   loading.value = true
   try {
-    const [value, groupRows] = await Promise.all([getConfig(), adminAPI.groups.getAllIncludingInactive()])
+    const [value, groupRows, settings] = await Promise.all([
+      getConfig(),
+      adminAPI.groups.getAllIncludingInactive(),
+      adminAPI.settings.getSettings(),
+    ])
     const normalized = normalizeConfig(value)
+    const normalizedFailureThreshold = normalizeFailureThreshold(settings.channel_monitor_failure_threshold)
     draft.value = structuredClone(normalized)
     groups.value = groupRows
     original.value = JSON.stringify(normalized)
+    failureThreshold.value = normalizedFailureThreshold
+    originalFailureThreshold.value = normalizedFailureThreshold
   } catch (error) {
     appStore.showError(extractApiErrorMessage(error, t('channelMonitorV2.settings.loadFailed')))
   } finally {
@@ -424,10 +465,16 @@ async function save() {
   saving.value = true
   try {
     const payload = normalizeConfig(draft.value)
-    const value = await updateConfig(payload)
+    const nextFailureThreshold = normalizeFailureThreshold(failureThreshold.value)
+    const [value] = await Promise.all([
+      updateConfig(payload),
+      adminAPI.settings.updateSettings({ channel_monitor_failure_threshold: nextFailureThreshold }),
+    ])
     const normalized = normalizeConfig(value)
     draft.value = structuredClone(normalized)
     original.value = JSON.stringify(normalized)
+    failureThreshold.value = nextFailureThreshold
+    originalFailureThreshold.value = nextFailureThreshold
     appStore.showSuccess(t('channelMonitorV2.settings.saveSuccess'))
   } catch (error) {
     appStore.showError(extractApiErrorMessage(error, t('channelMonitorV2.settings.saveFailed')))

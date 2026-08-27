@@ -376,10 +376,13 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 // channelMonitorIntervalMin / channelMonitorIntervalMax bound the default interval
 // (mirrors the monitor-level constraint but lives here so setting_service stays decoupled).
 const (
-	channelMonitorIntervalMin      = 15
-	channelMonitorIntervalMax      = 3600
-	channelMonitorIntervalFallback = 60
-	defaultChannelMonitorMode      = ChannelMonitorModeV1
+	channelMonitorIntervalMin              = 15
+	channelMonitorIntervalMax              = 3600
+	channelMonitorIntervalFallback         = 60
+	channelMonitorFailureThresholdMin      = 1
+	channelMonitorFailureThresholdMax      = 100
+	channelMonitorFailureThresholdFallback = 3
+	defaultChannelMonitorMode              = ChannelMonitorModeV1
 )
 
 // normalizeChannelMonitorMode accepts only v1/v2/hybrid; empty/invalid → v1 (safe default).
@@ -420,12 +423,31 @@ func clampChannelMonitorInterval(v int) int {
 	return v
 }
 
+func parseChannelMonitorFailureThreshold(raw string) int {
+	v, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil {
+		return channelMonitorFailureThresholdFallback
+	}
+	return clampChannelMonitorFailureThreshold(v)
+}
+
+func clampChannelMonitorFailureThreshold(v int) int {
+	if v < channelMonitorFailureThresholdMin {
+		return channelMonitorFailureThresholdMin
+	}
+	if v > channelMonitorFailureThresholdMax {
+		return channelMonitorFailureThresholdMax
+	}
+	return v
+}
+
 // ChannelMonitorRuntime is the lightweight view of the channel monitor feature
 // consumed by the runner, V2 aggregator, and user-facing handlers.
 type ChannelMonitorRuntime struct {
 	Enabled                bool
 	Mode                   string // ChannelMonitorModeV1, ChannelMonitorModeV2 or ChannelMonitorModeHybrid
 	DefaultIntervalSeconds int
+	FailureThreshold       int
 	// HideThroughput: when true, user-facing V2 APIs omit RPM/TPM scale signals.
 	HideThroughput bool
 	// ShowQuota: when true, user-facing monitor views keep the quota/balance
@@ -452,6 +474,7 @@ func (s *SettingService) GetChannelMonitorRuntime(ctx context.Context) ChannelMo
 			Enabled:                true,
 			Mode:                   defaultChannelMonitorMode,
 			DefaultIntervalSeconds: channelMonitorIntervalFallback,
+			FailureThreshold:       channelMonitorFailureThresholdFallback,
 			HideThroughput:         true,
 		}
 	}
@@ -459,6 +482,7 @@ func (s *SettingService) GetChannelMonitorRuntime(ctx context.Context) ChannelMo
 		SettingKeyChannelMonitorEnabled,
 		SettingKeyChannelMonitorMode,
 		SettingKeyChannelMonitorDefaultIntervalSeconds,
+		SettingKeyChannelMonitorFailureThreshold,
 		SettingKeyChannelMonitorHideThroughput,
 		SettingKeyChannelMonitorShowQuota,
 	})
@@ -467,6 +491,7 @@ func (s *SettingService) GetChannelMonitorRuntime(ctx context.Context) ChannelMo
 			Enabled:                true,
 			Mode:                   defaultChannelMonitorMode,
 			DefaultIntervalSeconds: channelMonitorIntervalFallback,
+			FailureThreshold:       channelMonitorFailureThresholdFallback,
 			HideThroughput:         true,
 		}
 	}
@@ -474,6 +499,7 @@ func (s *SettingService) GetChannelMonitorRuntime(ctx context.Context) ChannelMo
 		Enabled:                !isFalseSettingValue(vals[SettingKeyChannelMonitorEnabled]),
 		Mode:                   normalizeChannelMonitorMode(vals[SettingKeyChannelMonitorMode]),
 		DefaultIntervalSeconds: parseChannelMonitorInterval(vals[SettingKeyChannelMonitorDefaultIntervalSeconds]),
+		FailureThreshold:       parseChannelMonitorFailureThreshold(vals[SettingKeyChannelMonitorFailureThreshold]),
 		HideThroughput:         !isFalseSettingValue(vals[SettingKeyChannelMonitorHideThroughput]),
 		ShowQuota:              vals[SettingKeyChannelMonitorShowQuota] == "true",
 	}

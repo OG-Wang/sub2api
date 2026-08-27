@@ -49,7 +49,10 @@
 
       <MonitorSettingsPanel v-if="adminMonitorTab === 'v2'" />
 
-      <TablePageLayout v-else>
+      <template v-else>
+      <MonitorVisibilitySettingsCard />
+
+      <TablePageLayout>
       <template #filters>
         <MonitorFiltersBar
           v-model:search="searchQuery"
@@ -134,6 +137,7 @@
         />
       </template>
       </TablePageLayout>
+      </template>
     </div>
 
     <MonitorFormDialog
@@ -196,6 +200,7 @@ import MonitorTemplateManagerDialog from '@/components/admin/monitor/MonitorTemp
 import MonitorRunResultDialog from '@/components/admin/monitor/MonitorRunResultDialog.vue'
 import MonitorPrimaryModelCell from '@/components/admin/monitor/MonitorPrimaryModelCell.vue'
 import MonitorActionsCell from '@/components/admin/monitor/MonitorActionsCell.vue'
+import MonitorVisibilitySettingsCard from '@/components/admin/monitor/MonitorVisibilitySettingsCard.vue'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { useChannelMonitorFormat } from '@/composables/useChannelMonitorFormat'
 import MonitorSettingsPanel from '@/features/channel-monitor-v2/MonitorSettingsPanel.vue'

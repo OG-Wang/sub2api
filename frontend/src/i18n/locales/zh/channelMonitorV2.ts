@@ -122,6 +122,12 @@ export default {
       },
       namedModelsEmpty: '各平台模型列表为空：将展示全部真实模型名（不归入「其他」）。',
       namedModelsCount: '将展示 {count} 个命名模型维度；名单外模型归入各平台「其他」。',
+      displayTitle: '渠道页面展示',
+      failureThreshold: '连续失败隐藏阈值',
+      failureThresholdHint: '同一监控项的主模型连续 N 次探测失败后，从用户端渠道状态中隐藏；探测不会停止。一次正常或降级结果即可恢复展示。',
+      displayLoadFailed: '渠道页面展示设置加载失败',
+      displaySaveSuccess: '渠道页面展示设置已保存',
+      displaySaveFailed: '渠道页面展示设置保存失败',
       userContractTitle: '用户端展示约定',
       userContract: {
         health: '健康色三指标：错误率 60% + 首 Token P50 20% + 缓存率 20%（阈值可在上方配置）',
