@@ -125,6 +125,12 @@ export default {
       },
       namedModelsEmpty: 'Platform model lists are empty: every real model name will be shown (not folded into “Other”).',
       namedModelsCount: 'Showing {count} named model dimensions; unlisted models fold into per-platform “Other”.',
+      displayTitle: 'Channel page display',
+      failureThreshold: 'Consecutive failure hide threshold',
+      failureThresholdHint: 'Hide a monitor item from the user-facing channel status after N consecutive primary-model probe failures; probing continues. Any operational or degraded result shows it again.',
+      displayLoadFailed: 'Failed to load channel page display settings',
+      displaySaveSuccess: 'Channel page display settings saved',
+      displaySaveFailed: 'Failed to save channel page display settings',
       userContractTitle: 'User-facing display contract',
       userContract: {
         health: 'Health color weights: error rate 60% + first-token P50 20% + cache rate 20% (thresholds configurable above)',

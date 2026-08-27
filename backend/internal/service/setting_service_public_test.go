@@ -116,6 +116,29 @@ func TestSettingService_ChannelMonitorHideThroughputDefaultsToPrivate(t *testing
 	}
 }
 
+func TestSettingService_ChannelMonitorFailureThresholdNormalizes(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  int
+	}{
+		{name: "missing uses default", want: 3},
+		{name: "valid value", value: "4", want: 4},
+		{name: "invalid value uses default", value: "invalid", want: 3},
+		{name: "low value clamps", value: "0", want: 1},
+		{name: "high value clamps", value: "101", want: 100},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runtime := NewSettingService(&settingPublicRepoStub{values: map[string]string{
+				SettingKeyChannelMonitorFailureThreshold: tt.value,
+			}}, &config.Config{}).GetChannelMonitorRuntime(context.Background())
+			require.Equal(t, tt.want, runtime.FailureThreshold)
+		})
+	}
+}
+
 func TestSettingService_ChannelMonitorShowQuotaFailsClosed(t *testing.T) {
 	// 缺省（迁移插入 'false' / 老库无行）一律不展示。
 	missingRuntime := NewSettingService(&settingPublicRepoStub{values: map[string]string{}}, &config.Config{}).GetChannelMonitorRuntime(context.Background())

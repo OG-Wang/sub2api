@@ -130,6 +130,7 @@ func (h *ProviderHallHandler) List(c *gin.Context) {
 	for _, v := range views {
 		items = append(items, providerHallViewToItem(v))
 	}
+	filter.GroupIDs = providerHallGroupIDs(views)
 	response.Success(c, gin.H{
 		"items": items,
 		// 前端展示「数据生成时间」用。
@@ -147,6 +148,9 @@ func (h *ProviderHallHandler) passiveMatrix(
 	c *gin.Context,
 	filter service.ChannelMonitorV2Filter,
 ) *service.ChannelMonitorV2Matrix {
+	if len(filter.GroupIDs) == 0 {
+		return nil
+	}
 	matrix, err := h.v2Service.Matrix(
 		c.Request.Context(), filter, service.ChannelMonitorV2GroupByPlatformGroup, false,
 	)
@@ -155,6 +159,23 @@ func (h *ProviderHallHandler) passiveMatrix(
 		return nil
 	}
 	return matrix
+}
+
+func providerHallGroupIDs(views []*service.ProviderHallView) []int64 {
+	seen := make(map[int64]struct{}, len(views))
+	ids := make([]int64, 0, len(views))
+	for _, view := range views {
+		if view == nil || view.GroupID == nil || *view.GroupID <= 0 {
+			continue
+		}
+		id := *view.GroupID
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	return ids
 }
 
 func providerHallViewToItem(v *service.ProviderHallView) providerHallItem {
