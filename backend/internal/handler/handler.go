@@ -36,6 +36,7 @@ type AdminHandlers struct {
 	ScheduledTest          *admin.ScheduledTestHandler
 	Channel                *admin.ChannelHandler
 	ChannelMonitor         *admin.ChannelMonitorHandler
+	ChannelOnboarding      *admin.ChannelOnboardingHandler
 	ChannelMonitorTemplate *admin.ChannelMonitorRequestTemplateHandler
 	ContentModeration      *admin.ContentModerationHandler
 	PromptAudit            *securityaudit.PromptAdminHandler
