@@ -123,7 +123,8 @@ type ProviderHallView struct {
 // window 决定曲线的时间跨度，同时也是可用率的统计区间——两者用的是同一批探测点，
 // 所以列里的数字和图里的线永远对得上（见 hallAvailability）。
 //
-// 3 次查询，无 N+1：1 次查监控项，1 次批量 latest，1 次批量窗口内探测点。
+// 4 次查询，无 N+1：1 次查监控项，1 次批量最近 N 次主模型探测，1 次批量 latest，
+// 1 次批量窗口内探测点。
 func (s *ChannelMonitorService) ListProviderHallView(
 	ctx context.Context,
 	window HallTimelineWindow,
@@ -143,11 +144,28 @@ func (s *ChannelMonitorService) ListProviderHallView(
 		primaryByID[r.ID] = r.PrimaryModel
 	}
 
-	latestMap := s.batchLatest(ctx, ids)
-	timelineMap := s.batchHallTimeline(ctx, ids, primaryByID, window)
-
-	views := make([]*ProviderHallView, 0, len(rows))
+	failureThreshold := clampChannelMonitorFailureThreshold(s.probeRuntime(ctx).FailureThreshold)
+	recentMap := s.batchRecentPrimaryHistory(ctx, ids, primaryByID, failureThreshold)
+	visibleRows := make([]*ChannelMonitorHallRow, 0, len(rows))
+	visibleIDs := make([]int64, 0, len(rows))
+	visiblePrimaryByID := make(map[int64]string, len(rows))
 	for _, r := range rows {
+		if !providerHallMonitorVisible(recentMap[r.ID], failureThreshold) {
+			continue
+		}
+		visibleRows = append(visibleRows, r)
+		visibleIDs = append(visibleIDs, r.ID)
+		visiblePrimaryByID[r.ID] = r.PrimaryModel
+	}
+	if len(visibleRows) == 0 {
+		return []*ProviderHallView{}, nil
+	}
+
+	latestMap := s.batchLatest(ctx, visibleIDs)
+	timelineMap := s.batchHallTimeline(ctx, visibleIDs, visiblePrimaryByID, window)
+
+	views := make([]*ProviderHallView, 0, len(visibleRows))
+	for _, r := range visibleRows {
 		latest := latestMap[r.ID]
 		// 刻意不走 BatchMonitorStatusSummary：那个方法内部会再查一次 latest
 		// （这里已经取过）外加一次固定 7 天的可用率，而大厅的可用率改从窗口内的
@@ -159,6 +177,38 @@ func (s *ChannelMonitorService) ListProviderHallView(
 		))
 	}
 	return views, nil
+}
+
+// providerHallMonitorVisible applies the automatic user-facing visibility rule
+// to one independent monitor item. A monitor is hidden only after the configured
+// consecutive failed/error results for its primary model. Fewer than the configured
+// history rows are fail-open so a new monitor or an incomplete history does
+// not get hidden accidentally.
+func providerHallMonitorVisible(recent []*ChannelMonitorHistoryEntry, failureThreshold int) bool {
+	failureThreshold = clampChannelMonitorFailureThreshold(failureThreshold)
+	if len(recent) < failureThreshold {
+		return true
+	}
+	for _, entry := range recent[:failureThreshold] {
+		if entry == nil || (entry.Status != MonitorStatusFailed && entry.Status != MonitorStatusError) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *ChannelMonitorService) batchRecentPrimaryHistory(
+	ctx context.Context,
+	ids []int64,
+	primaryByID map[int64]string,
+	failureThreshold int,
+) map[int64][]*ChannelMonitorHistoryEntry {
+	recent, err := s.repo.ListRecentHistoryForMonitors(ctx, ids, primaryByID, failureThreshold)
+	if err != nil {
+		slog.Warn("channel_monitor: provider hall recent history failed", "error", err)
+		return map[int64][]*ChannelMonitorHistoryEntry{}
+	}
+	return recent
 }
 
 func buildProviderHallView(
