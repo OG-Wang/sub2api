@@ -21,6 +21,28 @@ type settingUpdateRepoStub struct {
 	setMultipleErr error
 }
 
+func TestSettingService_BuildSystemSettingsUpdatesClampsChannelMonitorFailureThreshold(t *testing.T) {
+	for _, tt := range []struct {
+		name  string
+		value int
+		want  string
+	}{
+		{name: "low", value: 0, want: "1"},
+		{name: "valid", value: 5, want: "5"},
+		{name: "high", value: 101, want: "100"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &settingUpdateRepoStub{}
+			svc := NewSettingService(repo, &config.Config{})
+			updates, err := svc.buildSystemSettingsUpdates(context.Background(), &SystemSettings{
+				ChannelMonitorFailureThreshold: tt.value,
+			})
+			require.NoError(t, err)
+			require.Equal(t, tt.want, updates[SettingKeyChannelMonitorFailureThreshold])
+		})
+	}
+}
+
 func (s *settingUpdateRepoStub) Get(ctx context.Context, key string) (*Setting, error) {
 	panic("unexpected Get call")
 }

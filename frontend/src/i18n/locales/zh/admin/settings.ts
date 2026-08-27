@@ -30,6 +30,8 @@ export default {
           modeHybridHint: '主动探测与被动聚合同时运行，用户端「渠道状态」页会显示两套数据合并后的分组对比视图。注意：两套后台任务负载相加，建议先在低峰期观察一轮。',
           defaultInterval: '默认检测间隔（秒）',
           defaultIntervalHint: '仅 V1 模式使用：新建渠道监控时表单的默认值，可被单个渠道覆盖。范围 15 – 3600 秒。',
+          failureThreshold: '连续失败隐藏阈值',
+          failureThresholdHint: '同一监控项的主模型连续 N 次探测失败后，从用户端渠道状态中隐藏；探测不会停止。一次正常或降级结果即可恢复展示。范围 1 – 100。',
           hideThroughput: '对用户隐藏吞吐速率（RPM / TPM）',
           hideThroughputHint:
             '开启后，用户端渠道监控页面与用户 API 不返回 RPM/TPM，避免用「速率 × 时间窗」反推集群规模。管理员仍可见完整指标；错误率、延迟、缓存率照常展示。',

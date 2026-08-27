@@ -91,6 +91,10 @@ describe('channel-monitor-v2 design system structure', () => {
     expect(src).toContain('class="card')
     expect(src).toContain('tab-active')
     expect(src).toMatch(/max-h-\[min\(40vh/)
+    expect(src).toContain('channel_monitor_failure_threshold')
+    expect(src).toContain('adminAPI.settings.updateSettings')
+    expect(src).toContain('min="1"')
+    expect(src).toContain('max="100"')
   })
 
   it('admin ChannelMonitorView V2 tab chrome uses project tabs', () => {
@@ -100,5 +104,15 @@ describe('channel-monitor-v2 design system structure', () => {
     expect(src).toContain('class="tabs')
     expect(src).toContain('tab-active')
     expect(src).toContain('MonitorSettingsPanel')
+    expect(src).toContain('MonitorVisibilitySettingsCard')
+  })
+
+  it('admin V1 monitor page exposes channel display threshold settings', () => {
+    const src = read('components/admin/monitor/MonitorVisibilitySettingsCard.vue')
+    expect(src).toContain('channelMonitorV2.settings.displayTitle')
+    expect(src).toContain('channel_monitor_failure_threshold')
+    expect(src).toContain('adminAPI.settings.updateSettings')
+    expect(src).toContain('min="1"')
+    expect(src).toContain('max="100"')
   })
 })

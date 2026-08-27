@@ -30,6 +30,8 @@ export default {
           modeHybridHint: 'Runs active probes and passive aggregation together; the Channel Status page then shows a merged per-group comparison view. Note both background jobs add up — watch load during off-peak first.',
           defaultInterval: 'Default check interval (seconds)',
           defaultIntervalHint: 'V1 only: default interval for new monitors (overridable per monitor). Range 15 – 3600 seconds.',
+          failureThreshold: 'Consecutive failure hide threshold',
+          failureThresholdHint: 'Hide a monitor item from the user-facing Channel Status page after N consecutive primary-model probe failures; probing continues. Any operational or degraded result shows it again. Range 1 – 100.',
           hideThroughput: 'Hide throughput rates from users (RPM / TPM)',
           hideThroughputHint:
             'When on, the user Channel Monitor page and user APIs omit RPM and TPM so fleet volume cannot be reverse-estimated from rates × window. Admins still see full metrics. Error rates, latency, and cache rates remain visible.',

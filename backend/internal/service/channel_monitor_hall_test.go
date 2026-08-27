@@ -56,6 +56,45 @@ func TestHallTimelineMaxPointsCoversDefaultInterval(t *testing.T) {
 		"上限低于默认配置的点数，正常部署也会被截断")
 }
 
+func TestProviderHallMonitorVisible(t *testing.T) {
+	tests := []struct {
+		name   string
+		status []string
+		want   bool
+	}{
+		{name: "fewer than three results stays visible", status: []string{MonitorStatusFailed, MonitorStatusError}, want: true},
+		{name: "three failures hides", status: []string{MonitorStatusFailed, MonitorStatusError, MonitorStatusFailed}, want: false},
+		{name: "latest operational reopens", status: []string{MonitorStatusOperational, MonitorStatusFailed, MonitorStatusFailed}, want: true},
+		{name: "success resets consecutive failure count", status: []string{MonitorStatusFailed, MonitorStatusFailed, MonitorStatusOperational}, want: true},
+		{name: "degraded counts as usable", status: []string{MonitorStatusError, MonitorStatusError, MonitorStatusDegraded}, want: true},
+		{name: "older success does not break three latest failures", status: []string{MonitorStatusFailed, MonitorStatusError, MonitorStatusFailed, MonitorStatusOperational}, want: false},
+		{name: "unknown result stays visible", status: []string{MonitorStatusFailed, MonitorStatusFailed, ""}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			entries := make([]*ChannelMonitorHistoryEntry, 0, len(tt.status))
+			for _, status := range tt.status {
+				entries = append(entries, &ChannelMonitorHistoryEntry{Status: status})
+			}
+			require.Equal(t, tt.want, providerHallMonitorVisible(entries, 3))
+		})
+	}
+}
+
+func TestProviderHallMonitorVisibleUsesConfiguredThreshold(t *testing.T) {
+	failures := []*ChannelMonitorHistoryEntry{
+		{Status: MonitorStatusFailed},
+		{Status: MonitorStatusError},
+		{Status: MonitorStatusFailed},
+		{Status: MonitorStatusError},
+	}
+
+	require.False(t, providerHallMonitorVisible(failures, 4))
+	require.True(t, providerHallMonitorVisible(failures, 5))
+	require.False(t, providerHallMonitorVisible(failures[:1], 0), "invalid low thresholds clamp to 1")
+}
+
 // TestBuildHallTimelinePreservesEveryProbe 转换层不重排、不合并、不丢点。
 //
 // 这是「不聚合」的回归防线：曾经这里按时间桶取平均，把一次真实故障
