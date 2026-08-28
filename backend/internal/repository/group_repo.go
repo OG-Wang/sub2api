@@ -44,10 +44,20 @@ func newGroupRepositoryWithSQL(client *dbent.Client, sqlq sqlExecutor) *groupRep
 }
 
 func (r *groupRepository) Create(ctx context.Context, groupIn *service.Group) error {
-	if err := createGroupRecord(ctx, r.client, groupIn); err != nil {
+	// clientFromContext lets the admin channel-onboarding workflow create the
+	// group inside its own transaction; without a transaction in the context
+	// this is the plain client, exactly as before.
+	client := clientFromContext(ctx, r.client)
+	if err := createGroupRecord(ctx, client, groupIn); err != nil {
 		return err
 	}
-	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
+	if err := enqueueSchedulerOutbox(ctx, client, service.SchedulerOutboxEventGroupChanged, nil, &groupIn.ID, nil); err != nil {
+		// Inside a transaction a failed statement poisons the whole transaction,
+		// so the error has to surface here instead of turning the next insert
+		// into a confusing "current transaction is aborted".
+		if dbent.TxFromContext(ctx) != nil {
+			return err
+		}
 		logger.LegacyPrintf("repository.group", "[SchedulerOutbox] enqueue group create failed: group=%d err=%v", groupIn.ID, err)
 	}
 	return nil
@@ -234,7 +244,10 @@ func (r *groupRepository) GetByID(ctx context.Context, id int64) (*service.Group
 
 func (r *groupRepository) GetByIDLite(ctx context.Context, id int64) (*service.Group, error) {
 	// AccountCount is intentionally not loaded here; use GetByID when needed.
-	m, err := r.client.Group.Query().
+	// clientFromContext matters for the admin channel-onboarding workflow:
+	// APIKeyService.Create resolves the group that the same transaction just
+	// inserted, which is invisible to a connection outside that transaction.
+	m, err := clientFromContext(ctx, r.client).Group.Query().
 		Where(group.IDEQ(id)).
 		Only(ctx)
 	if err != nil {

@@ -490,6 +490,18 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/channels/onboarding',
+    name: 'AdminChannelOnboarding',
+    component: () => import('@/views/admin/ChannelOnboardingView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Channel Onboarding',
+      titleKey: 'admin.channelOnboarding.title',
+      descriptionKey: 'admin.channelOnboarding.description'
+    }
+  },
+  {
     path: '/monitor',
     name: 'ChannelStatus',
     component: () => import('@/views/user/ChannelStatusView.vue'),
