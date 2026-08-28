@@ -265,7 +265,9 @@ const trendTarget = ref<HallRow | null>(null)
 // 大厅只用这三档。V2 的 ParseFilter 还支持 30d，但探测历史保留就是 30 天，
 // 30 天窗口下最早那几个桶必然是空的，且要对全表做分桶平均（实测 2.3s），
 // 不值得为一条注定残缺的曲线付这个代价。
-const range = ref<MonitorRange>('24h')
+// 默认 90m：渠道状态回答的是「现在能不能用」，24h 会把刚发生的故障摊平成小数点后的抖动。
+// 这也是后端 ParseFilter 的默认值（range 传空即 90m），前端此前是主动传 24h 覆盖掉它。
+const range = ref<MonitorRange>('90m')
 const rangeOptions = computed(() => [
   { value: '90m', label: t('providerHall.ranges.90m') },
   { value: '24h', label: t('providerHall.ranges.24h') },
