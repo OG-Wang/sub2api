@@ -114,6 +114,7 @@ func RegisterAdminRoutes(
 
 		// 渠道管理
 		registerChannelRoutes(admin, h)
+		registerChannelOnboardingRoutes(admin, h, settingService)
 
 		// 渠道监控
 		registerChannelMonitorRoutes(admin, h, settingService)
@@ -131,6 +132,12 @@ func RegisterAdminRoutes(
 		// 操作审计日志
 		registerAuditLogRoutes(admin, h, stepUpAuth)
 	}
+}
+
+func registerChannelOnboardingRoutes(admin *gin.RouterGroup, h *handler.Handlers, settingService *service.SettingService) {
+	onboarding := admin.Group("/channel-onboardings")
+	onboarding.Use(channelMonitorAdminFeatureGuard(settingService))
+	onboarding.POST("", h.Admin.ChannelOnboarding.Create)
 }
 
 func registerPromptAuditRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
